@@ -1,0 +1,67 @@
+<%= form_with model: expense, local: true, html: { multipart: true } do |f| %>
+  <% if expense.errors.any? %>
+    <div class="alert alert-danger">
+      <%= expense.errors.full_messages.join(", ") %>
+    </div>
+  <% end %>
+
+  <!-- Quick Category Pills -->
+  <div style="margin-bottom: 1.25rem;">
+    <label class="form-label">Select Expense Type</label>
+    <div class="category-pills">
+      <% @categories.each do |cat| %>
+        <button type="button" class="cat-pill <%= 'active' if expense.expense_category_id == cat.id %>" onclick="document.getElementById('expense_category_id_select').value = '<%= cat.id %>'; document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active')); this.classList.add('active');">
+          <span><%= cat.icon %></span>
+          <span><%= cat.name %></span>
+        </button>
+      <% end %>
+    </div>
+    <%= f.select :expense_category_id, @categories.map { |c| ["#{c.icon} #{c.name}", c.id] }, {}, id: "expense_category_id_select", class: "form-select", style: "display: none;" %>
+  </div>
+
+  <div class="form-group">
+    <%= f.label :amount, "Expense Amount (#{current_business.currency_symbol}) *", class: "form-label" %>
+    <%= f.number_field :amount, step: "1.0", required: true, autofocus: true, placeholder: "e.g. 150", class: "form-control", style: "font-size: 1.5rem; font-weight: 800; color: #fff;" %>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <%= f.label :date, "Date *", class: "form-label" %>
+      <%= f.date_field :date, required: true, class: "form-control" %>
+    </div>
+    <div class="form-group">
+      <%= f.label :payment_mode, "Payment Mode", class: "form-label" %>
+      <%= f.select :payment_mode, [["Cash", "cash"], ["UPI / PhonePe / GPay", "upi"], ["Company Card / Bank", "bank"]], {}, class: "form-select" %>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <%= f.label :work_project_id, "Tag to Work / Project (For Job Costing)", class: "form-label" %>
+      <%= f.select :work_project_id, [["🏢 General Overhead / Workshop (Not Project)", ""]] + @active_projects.map { |p| ["🏗️ #{p.title} (#{p.client&.name || 'Direct'})", p.id] }, {}, class: "form-select" %>
+      <span style="font-size: 0.72rem; color: var(--text-dim);">Tagging to a project tracks it against that job's Profit & Loss!</span>
+    </div>
+    <div class="form-group">
+      <%= f.label :paid_to, "Paid To / Vendor", class: "form-label" %>
+      <%= f.text_field :paid_to, placeholder: "e.g. Tea stall, Sharma Hardware, Fuel station", class: "form-control" %>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <%= f.label :notes, "Description / Details", class: "form-label" %>
+    <%= f.text_field :notes, placeholder: "e.g. 10 cups tea & biscuits for site workers", class: "form-control" %>
+  </div>
+
+  <div class="form-group" style="background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem;">
+    <%= f.label :receipt, "📸 Upload Bill / Receipt Snapshot (Saved to your Google Drive)", class: "form-label" %>
+    <%= f.file_field :receipt, accept: "image/*,application/pdf", class: "form-control" %>
+    <span style="font-size: 0.72rem; color: #38bdf8;">
+      📁 Files are stored directly into your Google Drive folder.
+    </span>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+    <%= f.submit expense.new_record? ? "Save Expense Entry" : "Update Expense", class: "btn btn-primary btn-lg", style: "flex: 1;" %>
+    <%= link_to "Cancel", expenses_path, class: "btn btn-secondary" %>
+  </div>
+<% end %>

@@ -1,0 +1,63 @@
+<% content_for :page_title do %>
+  <span>Clients Directory</span>
+<% end %>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff;">Clients & Customers</h2>
+    <p style="color: var(--text-muted); font-size: 0.85rem;">Manage customer contacts, billing profiles, and their works</p>
+  </div>
+  <%= link_to "+ Add New Client", new_client_path, class: "btn btn-primary" %>
+</div>
+
+<div class="card">
+  <% if @clients.empty? %>
+    <div style="text-align: center; padding: 3rem 1rem;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">👥</div>
+      <h3 style="color: #fff; margin-bottom: 0.5rem;">No clients added yet</h3>
+      <p style="color: var(--text-muted); margin-bottom: 1rem;">Add clients to associate with projects, quotations, and invoices.</p>
+      <%= link_to "+ Add Client", new_client_path, class: "btn btn-primary" %>
+    </div>
+  <% else %>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name / Company</th>
+            <th>Phone / WhatsApp</th>
+            <th>Email</th>
+            <th>Active Works</th>
+            <th>Total Invoiced</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @clients.each do |c| %>
+            <tr>
+              <td>
+                <div style="font-weight: 700; color: #fff;">
+                  <%= link_to c.name, client_path(c) %>
+                </div>
+                <% if c.company_name.present? %>
+                  <div style="font-size: 0.75rem; color: var(--text-dim);"><%= c.company_name %></div>
+                <% end %>
+              </td>
+              <td><%= c.phone.presence || "-" %></td>
+              <td><%= c.email.presence || "-" %></td>
+              <td><span class="badge badge-info"><%= c.work_projects.count %> Works</span></td>
+              <td style="font-weight: 600; color: #fff;">
+                <%= current_business.formatted_currency(c.invoices.where(doc_type: "invoice").sum(:total_amount)) %>
+              </td>
+              <td>
+                <div style="display: flex; gap: 0.35rem;">
+                  <%= link_to "Profile", client_path(c), class: "btn btn-secondary btn-sm" %>
+                  <%= link_to "Edit", edit_client_path(c), class: "btn btn-secondary btn-sm" %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>

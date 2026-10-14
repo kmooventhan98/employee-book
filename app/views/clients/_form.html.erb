@@ -1,0 +1,45 @@
+<%= form_with model: client, local: true do |f| %>
+  <% if client.errors.any? %>
+    <div class="alert alert-danger">
+      <%= client.errors.full_messages.join(", ") %>
+    </div>
+  <% end %>
+
+  <div class="form-row">
+    <div class="form-group">
+      <%= f.label :name, "Contact Person Name *", class: "form-label" %>
+      <%= f.text_field :name, required: true, autofocus: true, placeholder: "e.g. Anand Sharma", class: "form-control" %>
+    </div>
+    <div class="form-group">
+      <%= f.label :company_name, "Company / Firm Name (Optional)", class: "form-label" %>
+      <%= f.text_field :company_name, placeholder: "e.g. Sharma Builders & Infra", class: "form-control" %>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <%= f.label :phone, "Phone / WhatsApp *", class: "form-label" %>
+      <%= f.telephone_field :phone, placeholder: "+91 98765 11111", class: "form-control" %>
+    </div>
+    <div class="form-group">
+      <%= f.label :email, "Email Address", class: "form-label" %>
+      <%= f.email_field :email, placeholder: "billing@client.com", class: "form-control" %>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <%= f.label :address, "Billing / Site Address", class: "form-label" %>
+      <%= f.text_area :address, rows: 2, placeholder: "Plot 42, Industrial Area, Phase 2", class: "form-control" %>
+    </div>
+    <div class="form-group">
+      <%= f.label :tax_id, "Tax / GSTIN Number (Optional)", class: "form-label" %>
+      <%= f.text_field :tax_id, placeholder: "e.g. 29ABCDE1234F1Z5", class: "form-control" %>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+    <%= f.submit client.new_record? ? "Save Client" : "Update Client", class: "btn btn-primary btn-lg", style: "flex: 1;" %>
+    <%= link_to "Cancel", clients_path, class: "btn btn-secondary" %>
+  </div>
+<% end %>

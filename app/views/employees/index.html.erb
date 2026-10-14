@@ -1,0 +1,107 @@
+<% content_for :page_title do %>
+  <span>Employees & Laborers</span>
+<% end %>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff;">Staff & Labor Registry</h2>
+    <p style="color: var(--text-muted); font-size: 0.85rem;">
+      Manage daily, weekly, and monthly workers, their rates, and pending advances
+    </p>
+  </div>
+  <div style="display: flex; gap: 0.5rem;">
+    <%= link_to "📝 Daily Attendance", bulk_attendances_path, class: "btn btn-secondary" %>
+    <%= link_to "+ Add New Employee", new_employee_path, class: "btn btn-primary" %>
+  </div>
+</div>
+
+<!-- Quick Stat Cards -->
+<div class="stats-grid" style="margin-bottom: 1.5rem;">
+  <div class="stat-card primary">
+    <div class="stat-icon primary">👷</div>
+    <div class="stat-meta">
+      <div class="stat-label">Total Labor Force</div>
+      <div class="stat-value"><%= @total_count %></div>
+      <div class="stat-subtext"><%= @active_count %> Active • <%= @total_count - @active_count %> Inactive</div>
+    </div>
+  </div>
+
+  <div class="stat-card warning">
+    <div class="stat-icon warning">💸</div>
+    <div class="stat-meta">
+      <div class="stat-label">Total Worker Advances Given (Khata)</div>
+      <div class="stat-value"><%= current_business.formatted_currency(@total_pending_advances) %></div>
+      <div class="stat-subtext">To be deducted from future wage payouts</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <% if @employees.empty? %>
+    <div style="text-align: center; padding: 3rem 1rem;">
+      <div style="font-size: 3rem; margin-bottom: 0.75rem;">👷‍♂️</div>
+      <h3 style="font-size: 1.15rem; color: #fff; margin-bottom: 0.5rem;">No employees registered yet</h3>
+      <p style="color: var(--text-muted); margin-bottom: 1.25rem;">Add your first laborer or technician to start logging attendance and wages.</p>
+      <%= link_to "+ Add Employee On The Go", new_employee_path, class: "btn btn-primary" %>
+    </div>
+  <% else %>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Employee Name</th>
+            <th>Role / Trade</th>
+            <th>Wage Type</th>
+            <th>Rate</th>
+            <th>OT Rate (/hr)</th>
+            <th>Pending Advance</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @employees.each do |emp| %>
+            <% pending_adv = emp.total_advances_pending %>
+            <tr>
+              <td>
+                <div style="font-weight: 700; color: #fff;">
+                  <%= link_to emp.name, employee_path(emp) %>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-dim);"><%= emp.phone.presence || "No phone" %></div>
+              </td>
+              <td><%= emp.role_title.presence || "General Worker" %></td>
+              <td>
+                <span class="badge badge-neutral"><%= emp.wage_type.capitalize %></span>
+              </td>
+              <td style="font-weight: 600; color: #fff;">
+                <%= current_business.formatted_currency(emp.base_rate) %>
+                <span style="font-size: 0.72rem; color: var(--text-dim);">/<%= emp.wage_type == 'daily' ? 'day' : (emp.wage_type == 'weekly' ? 'wk' : 'mo') %></span>
+              </td>
+              <td>
+                <%= current_business.formatted_currency(emp.overtime_hourly_rate) %>
+              </td>
+              <td>
+                <% if pending_adv > 0 %>
+                  <span class="badge badge-warning"><%= current_business.formatted_currency(pending_adv) %></span>
+                <% else %>
+                  <span style="color: var(--text-dim); font-size: 0.85rem;">Nil</span>
+                <% end %>
+              </td>
+              <td>
+                <span class="badge <%= emp.status == 'active' ? 'badge-success' : 'badge-danger' %>">
+                  <%= emp.status.capitalize %>
+                </span>
+              </td>
+              <td>
+                <div style="display: flex; gap: 0.35rem;">
+                  <%= link_to "Profile & Khata", employee_path(emp), class: "btn btn-secondary btn-sm" %>
+                  <%= link_to "Edit", edit_employee_path(emp), class: "btn btn-secondary btn-sm" %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>

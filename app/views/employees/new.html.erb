@@ -1,0 +1,17 @@
+<% content_for :page_title do %>
+  <span>Add New Employee</span>
+<% end %>
+
+<div style="max-width: 800px; margin: 0 auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div>
+      <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff;">Add Employee / Laborer</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem;">Quickly onboard new staff, set daily/weekly wage and overtime rates</p>
+    </div>
+    <%= link_to "← Back to List", employees_path, class: "btn btn-secondary btn-sm" %>
+  </div>
+
+  <div class="card">
+    <%= render "form", employee: @employee %>
+  </div>
+</div>

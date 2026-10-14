@@ -1,0 +1,73 @@
+<%= form_with model: employee, local: true do |f| %>
+  <% if employee.errors.any? %>
+    <div class="alert alert-danger">
+      <div>
+        <strong>Please correct the following errors:</strong>
+        <ul style="margin-top: 0.25rem; padding-left: 1.25rem;">
+          <% employee.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="form-row">
+    <div class="form-group">
+      <%= f.label :name, "Worker / Employee Name *", class: "form-label" %>
+      <%= f.text_field :name, required: true, placeholder: "e.g. Suresh Kumar", class: "form-control" %>
+    </div>
+    <div class="form-group">
+      <%= f.label :phone, "Mobile Number", class: "form-label" %>
+      <%= f.telephone_field :phone, placeholder: "+91 98765 00000", class: "form-control" %>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <%= f.label :role_title, "Trade / Role (e.g. Mason, Welder, Helper)", class: "form-label" %>
+      <%= f.text_field :role_title, placeholder: "e.g. Senior Carpenter / Helper", class: "form-control" %>
+    </div>
+    <div class="form-group">
+      <%= f.label :status, "Current Status", class: "form-label" %>
+      <%= f.select :status, [["Active (Working)", "active"], ["Inactive / Left", "inactive"]], {}, class: "form-select" %>
+    </div>
+  </div>
+
+  <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.25rem;">
+    <h4 style="font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 1rem;">💰 Wage & Pay Structure</h4>
+
+    <div class="form-row">
+      <div class="form-group">
+        <%= f.label :wage_type, "Wage Frequency *", class: "form-label" %>
+        <%= f.select :wage_type, [["Daily Wage (Per Day)", "daily"], ["Weekly Wage (Per Week)", "weekly"], ["Monthly Salary (Per Month)", "monthly"]], {}, class: "form-select" %>
+      </div>
+      <div class="form-group">
+        <%= f.label :base_rate, "Base Rate (#{current_business.currency_symbol}) *", class: "form-label" %>
+        <%= f.number_field :base_rate, step: "0.50", required: true, class: "form-control" %>
+        <span style="font-size: 0.72rem; color: var(--text-dim);">For daily workers, this is pay per full day.</span>
+      </div>
+      <div class="form-group">
+        <%= f.label :overtime_hourly_rate, "Overtime Rate (#{current_business.currency_symbol}/hr)", class: "form-label" %>
+        <%= f.number_field :overtime_hourly_rate, step: "0.50", class: "form-control" %>
+        <span style="font-size: 0.72rem; color: var(--text-dim);">Hourly rate for overtime hours worked.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <%= f.label :joined_date, "Joining Date", class: "form-label" %>
+      <%= f.date_field :joined_date, class: "form-control" %>
+    </div>
+    <div class="form-group">
+      <%= f.label :notes, "Notes / Identification (Aadhaar / Address / Skills)", class: "form-label" %>
+      <%= f.text_area :notes, rows: 2, placeholder: "Special remarks, skills or emergency contact", class: "form-control" %>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+    <%= f.submit employee.new_record? ? "Save & Add Employee" : "Update Employee Details", class: "btn btn-primary" %>
+    <%= link_to "Cancel", employees_path, class: "btn btn-secondary" %>
+  </div>
+<% end %>

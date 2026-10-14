@@ -1,0 +1,17 @@
+<% content_for :page_title do %>
+  <span>Log Daily Expense</span>
+<% end %>
+
+<div style="max-width: 650px; margin: 0 auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div>
+      <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff;">☕ Log Daily Expense / Petty Cash</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem;">Fast record for tea, food, materials, or site fuel</p>
+    </div>
+    <%= link_to "← Expenses List", expenses_path, class: "btn btn-secondary btn-sm" %>
+  </div>
+
+  <div class="card">
+    <%= render "form", expense: @expense %>
+  </div>
+</div>

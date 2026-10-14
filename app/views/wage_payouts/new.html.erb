@@ -1,0 +1,96 @@
+<% content_for :page_title do %>
+  <span>Wage Payout: <%= @employee.name %></span>
+<% end %>
+
+<div style="max-width: 650px; margin: 0 auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div>
+      <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff;">💵 Settle Wage Payout</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem;">Worker: <strong style="color: #fff;"><%= @employee.name %></strong> (<%= @employee.wage_type.capitalize %> Rate: <%= current_business.formatted_currency(@employee.base_rate) %>)</p>
+    </div>
+    <%= link_to "← Back", employee_path(@employee), class: "btn btn-secondary btn-sm" %>
+  </div>
+
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <h3 style="font-size: 0.95rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.85rem;">1. Select Settlement Period</h3>
+
+    <%= form_with url: new_employee_wage_payout_path(@employee), method: :get, local: true do |sf| %>
+      <div class="form-row" style="align-items: flex-end;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Period Start</label>
+          <%= sf.date_field :period_start, value: @period_start, class: "form-control" %>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Period End</label>
+          <%= sf.date_field :period_end, value: @period_end, class: "form-control" %>
+        </div>
+        <div>
+          <%= sf.submit "Recalculate", class: "btn btn-secondary" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="card">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem; background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-sm); margin-bottom: 1.25rem;">
+      <div>
+        <div style="font-size: 0.78rem; color: var(--text-muted);">Days Worked in Period</div>
+        <div style="font-size: 1.25rem; font-weight: 700; color: #fff;"><%= @days_worked %> days (<%= @ot_hours %>h OT)</div>
+      </div>
+      <div>
+        <div style="font-size: 0.78rem; color: var(--text-muted);">Gross Earned Wage</div>
+        <div style="font-size: 1.25rem; font-weight: 700; color: #34d399;"><%= current_business.formatted_currency(@gross_wage) %></div>
+      </div>
+    </div>
+
+    <%= form_with model: [@employee, @wage_payout], local: true do |f| %>
+      <% if @wage_payout.errors.any? %>
+        <div class="alert alert-danger">
+          <%= @wage_payout.errors.full_messages.join(", ") %>
+        </div>
+      <% end %>
+
+      <%= f.hidden_field :period_start, value: @period_start %>
+      <%= f.hidden_field :period_end, value: @period_end %>
+
+      <div class="form-row">
+        <div class="form-group">
+          <%= f.label :gross_wage, "Gross Wage Amount (#{current_business.currency_symbol})", class: "form-label" %>
+          <%= f.number_field :gross_wage, step: "0.50", class: "form-control", id: "gross_wage_input" %>
+        </div>
+        <div class="form-group">
+          <%= f.label :advances_deducted, "Deduct Advances (Khata Cut)", class: "form-label" %>
+          <%= f.number_field :advances_deducted, step: "0.50", class: "form-control", id: "advances_input" %>
+          <span style="font-size: 0.72rem; color: var(--warning-text);">Pending advance: <%= current_business.formatted_currency(@pending_advances) %></span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <%= f.label :net_paid, "Final Net Cash Disbursed (#{current_business.currency_symbol}) *", class: "form-label" %>
+        <%= f.number_field :net_paid, step: "0.50", required: true, class: "form-control", id: "net_paid_input", style: "font-size: 1.4rem; font-weight: 800; color: #34d399;" %>
+        <span style="font-size: 0.72rem; color: var(--text-dim);">Actual cash/transfer handed to the laborer.</span>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <%= f.label :payment_date, "Disbursement Date *", class: "form-label" %>
+          <%= f.date_field :payment_date, required: true, class: "form-control" %>
+        </div>
+        <div class="form-group">
+          <%= f.label :payment_mode, "Payment Mode", class: "form-label" %>
+          <%= f.select :payment_mode, [["Cash", "cash"], ["UPI / Online", "upi"], ["Bank Account Transfer", "bank"]], {}, class: "form-select" %>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <%= f.label :notes, "Notes / Receipt Voucher", class: "form-label" %>
+        <%= f.text_field :notes, placeholder: "e.g. Paid in full for 1st fortnight of October", class: "form-control" %>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+        <%= f.submit "Confirm & Disburse Wage Payout", class: "btn btn-success btn-lg", style: "flex: 1;" %>
+        <%= link_to "Cancel", employee_path(@employee), class: "btn btn-secondary" %>
+      </div>
+    <% end %>
+  </div>
+</div>

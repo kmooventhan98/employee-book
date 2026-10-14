@@ -1,0 +1,134 @@
+<% content_for :page_title do %>
+  <span>Daily Expenses & Petty Cash</span>
+<% end %>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff;">Daily Operational & Petty Expenses</h2>
+    <p style="color: var(--text-muted); font-size: 0.85rem;">
+      Log tea, refreshments, meals, hardware supplies, and fuel with direct Google Drive receipt backups
+    </p>
+  </div>
+  <div style="display: flex; gap: 0.5rem; align-items: center;">
+    <%= link_to "← Prev Month", expenses_path(month: @month.prev_month), class: "btn btn-secondary btn-sm" %>
+    <span style="font-weight: 700; color: #fff; font-size: 0.9rem; padding: 0 0.5rem;"><%= @month.strftime("%B %Y") %></span>
+    <%= link_to "Next Month →", expenses_path(month: @month.next_month), class: "btn btn-secondary btn-sm" %>
+    <%= link_to "☕ + Log Daily Expense", new_expense_path, class: "btn btn-primary" %>
+  </div>
+</div>
+
+<!-- Expense Category Stat Cards -->
+<div class="stats-grid" style="margin-bottom: 1.5rem;">
+  <div class="stat-card danger">
+    <div class="stat-icon danger">💸</div>
+    <div class="stat-meta">
+      <div class="stat-label">Total Expenses (<%= @month.strftime("%b") %>)</div>
+      <div class="stat-value" style="color: var(--danger-text);"><%= current_business.formatted_currency(@total_month_expense) %></div>
+      <div class="stat-subtext"><%= @expenses.count %> transactions recorded</div>
+    </div>
+  </div>
+
+  <div class="stat-card warning">
+    <div class="stat-icon warning">☕</div>
+    <div class="stat-meta">
+      <div class="stat-label">Tea, Coffee & Food</div>
+      <div class="stat-value" style="color: var(--warning-text);"><%= current_business.formatted_currency(@tea_food_expense) %></div>
+      <div class="stat-subtext">Worker snacks & daily refreshments</div>
+    </div>
+  </div>
+
+  <div class="stat-card success">
+    <div class="stat-icon success">🧱</div>
+    <div class="stat-meta">
+      <div class="stat-label">Hardware & Materials</div>
+      <div class="stat-value" style="color: var(--success-text);"><%= current_business.formatted_currency(@materials_expense) %></div>
+      <div class="stat-subtext">Direct supplies bought for sites</div>
+    </div>
+  </div>
+
+  <div class="stat-card info">
+    <div class="stat-icon info">⛽</div>
+    <div class="stat-meta">
+      <div class="stat-label">Fuel & Transport</div>
+      <div class="stat-value" style="color: var(--info-text);"><%= current_business.formatted_currency(@transport_expense) %></div>
+      <div class="stat-subtext">Travel & vehicle logistics</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <span>📋</span> Expense Entries for <%= @month.strftime("%B %Y") %>
+    </div>
+    <%= link_to "+ Add Expense", new_expense_path, class: "btn btn-secondary btn-sm" %>
+  </div>
+
+  <% if @expenses.empty? %>
+    <div style="text-align: center; padding: 3rem 1rem;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">☕</div>
+      <h3 style="color: #fff; margin-bottom: 0.5rem;">No expenses logged for <%= @month.strftime("%B %Y") %></h3>
+      <p style="color: var(--text-muted); margin-bottom: 1.25rem;">Log your daily tea, snacks, or raw materials in 2 taps.</p>
+      <%= link_to "☕ + Quick Log Tea / Food", new_expense_path, class: "btn btn-primary" %>
+    </div>
+  <% else %>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Work / Project</th>
+            <th>Amount</th>
+            <th>Paid To / Details</th>
+            <th>Receipt / Drive</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @expenses.each do |exp| %>
+            <tr>
+              <td><%= exp.date.strftime("%d %b %Y") %></td>
+              <td>
+                <span class="badge" style="background: <%= exp.expense_category&.color || '#6366f1' %>22; color: #fff; border: 1px solid <%= exp.expense_category&.color || '#6366f1' %>55;">
+                  <%= exp.expense_category&.icon %> <%= exp.expense_category&.name || "General" %>
+                </span>
+              </td>
+              <td>
+                <% if exp.work_project %>
+                  <%= link_to exp.work_project.title, work_project_path(exp.work_project) %>
+                <% else %>
+                  <span style="color: var(--text-dim);">Shop Overhead</span>
+                <% end %>
+              </td>
+              <td style="font-weight: 700; color: #fff; font-size: 1rem;">
+                <%= current_business.formatted_currency(exp.amount) %>
+              </td>
+              <td>
+                <div><%= exp.paid_to.presence || "-" %></div>
+                <div style="font-size: 0.75rem; color: var(--text-dim);"><%= exp.notes %></div>
+              </td>
+              <td>
+                <% if exp.google_drive_file_url.present? %>
+                  <a href="<%= exp.google_drive_file_url %>" target="_blank" rel="noopener" class="badge badge-info" style="gap: 4px;">
+                    📁 View in Drive ↗
+                  </a>
+                <% elsif exp.receipt.attached? %>
+                  <%= link_to "📎 Receipt", url_for(exp.receipt), target: "_blank", class: "badge badge-neutral" %>
+                <% else %>
+                  <span style="color: var(--text-dim); font-size: 0.75rem;">None</span>
+                <% end %>
+              </td>
+              <td>
+                <div style="display: flex; gap: 0.35rem;">
+                  <%= link_to "Edit", edit_expense_path(exp), class: "btn btn-secondary btn-sm" %>
+                  <%= button_to "Delete", expense_path(exp), method: :delete, data: { turbo_confirm: "Delete this expense record?" }, class: "btn btn-danger btn-sm" %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>

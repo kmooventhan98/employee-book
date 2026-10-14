@@ -1,0 +1,20 @@
+<% content_for :page_title do %>
+  <span>Edit: <%= @project.title %></span>
+<% end %>
+
+<div style="max-width: 750px; margin: 0 auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div>
+      <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff;">Edit Work / Project</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem;"><%= @project.title %></p>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+      <%= link_to "View P&L", work_project_path(@project), class: "btn btn-secondary btn-sm" %>
+      <%= link_to "← Works List", work_projects_path, class: "btn btn-secondary btn-sm" %>
+    </div>
+  </div>
+
+  <div class="card">
+    <%= render "form", project: @project %>
+  </div>
+</div>

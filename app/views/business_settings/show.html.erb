@@ -1,0 +1,147 @@
+<% content_for :page_title do %>
+  <span>Business Settings & Google Drive</span>
+<% end %>
+
+<div style="max-width: 850px; margin: 0 auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div>
+      <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff;">⚙️ Business Settings & Storage</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem;">Configure business profile, currency, invoice formatting, and Google Drive storage</p>
+    </div>
+  </div>
+
+  <!-- 1. Google Drive Integration Card (User Drive File Storage) -->
+  <div class="card" style="margin-bottom: 2rem; border-color: rgba(59, 130, 246, 0.4); background: linear-gradient(145deg, rgba(59, 130, 246, 0.08) 0%, rgba(17, 24, 39, 0.95) 100%);">
+    <div class="card-header">
+      <div class="card-title">
+        <span>📁</span> User Drive Storage (Google Drive Integration)
+      </div>
+      <span class="badge <%= @business.google_drive_connected? ? 'badge-success' : 'badge-warning' %>">
+        <%= @business.google_drive_connected? ? "✓ Google Drive Connected" : "Not Connected" %>
+      </span>
+    </div>
+
+    <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.25rem;">
+      Files, expense receipts (tea, fuel bills), invoice PDFs, and monthly P&L backups are stored directly into <strong>your personal Google Drive</strong>, keeping you in 100% control of your documents.
+    </p>
+
+    <%= form_with model: @business, url: business_settings_path, method: :patch, local: true do |f| %>
+      <div style="background: rgba(0, 0, 0, 0.35); padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Google Drive Status</label>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.35rem;">
+              <%= f.check_box :google_drive_connected, id: "drive_connect_toggle", style: "width: 18px; height: 18px;" %>
+              <label for="drive_connect_toggle" style="font-size: 0.9rem; font-weight: 600; color: #fff; cursor: pointer;">
+                Enable Google Drive Sync for Receipts & Invoices
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Google Account Email</label>
+            <%= f.email_field :google_drive_email, placeholder: "e.g. owner@gmail.com", class: "form-control" %>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Target Google Drive Folder Name / ID</label>
+          <%= f.text_field :google_drive_folder_id, placeholder: "e.g. KarigarBook - #{@business.name}", class: "form-control" %>
+          <span style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem; display: block;">
+            All uploaded receipts and generated invoice PDFs are stored inside this folder on your Google Drive.
+          </span>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <% if @business.google_drive_connected? && @business.google_drive_folder_id.present? %>
+          <a href="https://drive.google.com" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="color: #38bdf8;">
+            ↗ Open Folder in Google Drive
+          </a>
+        <% end %>
+        <%= f.submit "Save Drive Configuration", class: "btn btn-primary btn-sm" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 2. Business Profile Card -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+      <div class="card-title">
+        <span>🏢</span> Business & Billing Profile
+      </div>
+    </div>
+
+    <%= form_with model: @business, url: business_settings_path, method: :patch, local: true do |f| %>
+      <div class="form-row">
+        <div class="form-group">
+          <%= f.label :name, "Business Name *", class: "form-label" %>
+          <%= f.text_field :name, required: true, class: "form-control" %>
+        </div>
+        <div class="form-group">
+          <%= f.label :phone, "Business Phone / WhatsApp", class: "form-label" %>
+          <%= f.telephone_field :phone, class: "form-control" %>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <%= f.label :currency_symbol, "Currency Symbol *", class: "form-label" %>
+          <%= f.select :currency_symbol, [["₹ (Rupee)", "₹"], ["$ (Dollar)", "$"], ["€ (Euro)", "€"], ["£ (Pound)", "£"], ["AED", "AED"]], {}, class: "form-select" %>
+        </div>
+        <div class="form-group">
+          <%= f.label :currency_code, "Currency Code", class: "form-label" %>
+          <%= f.text_field :currency_code, placeholder: "INR, USD, EUR", class: "form-control" %>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <%= f.label :email, "Billing Email", class: "form-label" %>
+          <%= f.email_field :email, class: "form-control" %>
+        </div>
+        <div class="form-group">
+          <%= f.label :tax_id, "GSTIN / VAT / Tax ID", class: "form-label" %>
+          <%= f.text_field :tax_id, placeholder: "e.g. 29ABCDE1234F1Z5", class: "form-control" %>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <%= f.label :address, "Physical / Workshop Address", class: "form-label" %>
+        <%= f.text_area :address, rows: 2, class: "form-control" %>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <%= f.label :invoice_prefix, "Invoice Prefix (e.g. INV)", class: "form-label" %>
+          <%= f.text_field :invoice_prefix, class: "form-control" %>
+        </div>
+        <div class="form-group">
+          <%= f.label :quotation_prefix, "Quotation Prefix (e.g. EST)", class: "form-label" %>
+          <%= f.text_field :quotation_prefix, class: "form-control" %>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem;">
+        <%= f.submit "Save Business Profile", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 3. Expense Categories Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span>🏷️</span> Active Expense Categories
+      </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem;">
+      <% @categories.each do |cat| %>
+        <span class="badge" style="background: <%= cat.color || '#6366f1' %>22; color: #fff; font-size: 0.85rem; padding: 0.4rem 0.75rem; border: 1px solid <%= cat.color || '#6366f1' %>55;">
+          <%= cat.icon %> <%= cat.name %>
+        </span>
+      <% end %>
+    </div>
+  </div>
+</div>

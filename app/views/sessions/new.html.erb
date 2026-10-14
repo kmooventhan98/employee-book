@@ -1,0 +1,28 @@
+<div style="text-align: center; margin-bottom: 2rem;">
+  <div class="brand-icon" style="width: 54px; height: 54px; font-size: 1.6rem; margin: 0 auto 1rem;">KB</div>
+  <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">KarigarBook</h2>
+  <p style="color: var(--text-muted); font-size: 0.88rem;">Small Business Labor & Finance OS</p>
+</div>
+
+<%= form_with url: session_path, local: true do |f| %>
+  <div class="form-group">
+    <%= f.label :email_address, "Email Address", class: "form-label" %>
+    <%= f.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: "owner@workshop.com", class: "form-control", value: params[:email_address] %>
+  </div>
+
+  <div class="form-group">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
+      <%= f.label :password, "Password", class: "form-label", style: "margin-bottom: 0;" %>
+      <%= link_to "Forgot?", new_password_path, style: "font-size: 0.78rem; color: #818cf8;" %>
+    </div>
+    <%= f.password_field :password, required: true, autocomplete: "current-password", placeholder: "••••••••", class: "form-control" %>
+  </div>
+
+  <div style="margin-top: 1.5rem;">
+    <%= f.submit "Sign In to Business", class: "btn btn-primary btn-lg", style: "width: 100%;" %>
+  </div>
+<% end %>
+
+<div style="margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid var(--border-subtle); text-align: center; font-size: 0.85rem; color: var(--text-muted);">
+  New business owner? <%= link_to "Create your Business Account", new_registration_path, style: "color: #818cf8; font-weight: 600;" %>
+</div>

@@ -1,0 +1,134 @@
+<% content_for :page_title do %>
+  <span>Monthly Profit & Loss</span>
+<% end %>
+
+<!-- Header & Month Navigator -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff;">Monthly Profit & Loss Statement</h2>
+    <p style="color: var(--text-muted); font-size: 0.85rem;">
+      Real-time business profitability: Revenue Collected minus Labor Wages minus Operating Expenses
+    </p>
+  </div>
+  <div style="display: flex; gap: 0.5rem; align-items: center;">
+    <%= link_to "← Prev Month", pnl_report_path(month: @month_date.prev_month), class: "btn btn-secondary btn-sm" %>
+    <span style="font-weight: 800; color: #fff; font-size: 1.05rem; padding: 0 0.5rem;"><%= @month_date.strftime("%B %Y") %></span>
+    <%= link_to "Next Month →", pnl_report_path(month: @month_date.next_month), class: "btn btn-secondary btn-sm" %>
+    <button onclick="window.print();" class="btn btn-primary btn-sm">🖨️ Print P&L</button>
+  </div>
+</div>
+
+<!-- Primary Net Profit / Loss Banner -->
+<div class="card" style="margin-bottom: 2rem; background: <%= @cash_net_profit >= 0 ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.05))' : 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.05))' %>; border-color: <%= @cash_net_profit >= 0 ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)' %>;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <div style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: <%= @cash_net_profit >= 0 ? 'var(--success-text)' : 'var(--danger-text)' %>;">
+        <%= @cash_net_profit >= 0 ? '✓ NET PROFIT (CASH REALIZED)' : '⚠️ NET LOSS' %> FOR <%= @month_date.strftime("%B %Y").upcase %>
+      </div>
+      <div style="font-size: 2.25rem; font-weight: 800; color: #fff; margin: 0.25rem 0;">
+        <%= current_business.formatted_currency(@cash_net_profit) %>
+      </div>
+      <div style="font-size: 0.85rem; color: var(--text-muted);">
+        Revenue Collected (<%= current_business.formatted_currency(@revenue_collected) %>) − Labor (<%= current_business.formatted_currency(@labor_cost) %>) − Expenses (<%= current_business.formatted_currency(@total_expenses) %>)
+      </div>
+    </div>
+
+    <div style="text-align: right;">
+      <div style="font-size: 0.8rem; color: var(--text-dim);">Compare to Last Month (<%= @month_date.prev_month.strftime("%b") %>):</div>
+      <div style="font-size: 1.15rem; font-weight: 700; color: <%= @prev_profit >= 0 ? 'var(--success-text)' : 'var(--danger-text)' %>;">
+        <%= current_business.formatted_currency(@prev_profit) %>
+      </div>
+      <div style="font-size: 0.78rem; color: var(--text-dim); margin-top: 4px;">
+        <% if @prev_profit != 0 %>
+          Diff: <%= current_business.formatted_currency(@cash_net_profit - @prev_profit) %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detailed P&L Breakdown Table -->
+<div class="card" style="margin-bottom: 2rem;">
+  <div class="card-header">
+    <div class="card-title">
+      <span>📊</span> Statement of Revenue & Expenses (<%= @month_date.strftime("%B %Y") %>)
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Category / Account</th>
+          <th style="text-align: right;">Amount (<%= current_business.currency_symbol %>)</th>
+          <th style="text-align: right;">% of Revenue</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Revenue Section -->
+        <tr style="background: rgba(255, 255, 255, 0.02); font-weight: 700;">
+          <td style="color: #38bdf8;">1. OPERATING REVENUE</td>
+          <td style="text-align: right; color: #38bdf8;"><%= current_business.formatted_currency(@revenue_collected) %></td>
+          <td style="text-align: right; color: #38bdf8;">100%</td>
+        </tr>
+        <tr>
+          <td style="padding-left: 2rem; color: var(--text-muted);">Client Invoices Collected (Cash/Bank/UPI)</td>
+          <td style="text-align: right;"><%= current_business.formatted_currency(@revenue_collected) %></td>
+          <td style="text-align: right; color: var(--text-dim);">-</td>
+        </tr>
+        <tr>
+          <td style="padding-left: 2rem; color: var(--text-dim); font-size: 0.8rem;">* Total Invoiced / Billed during month: <%= current_business.formatted_currency(@revenue_billed) %></td>
+          <td style="text-align: right; color: var(--text-dim); font-size: 0.8rem;">-</td>
+          <td style="text-align: right; color: var(--text-dim); font-size: 0.8rem;">-</td>
+        </tr>
+
+        <!-- Direct Labor Section -->
+        <tr style="background: rgba(255, 255, 255, 0.02); font-weight: 700;">
+          <td style="color: #fbbf24;">2. DIRECT LABOR & WAGES</td>
+          <td style="text-align: right; color: #fbbf24;">-<%= current_business.formatted_currency(@labor_cost) %></td>
+          <td style="text-align: right; color: #fbbf24;">
+            <%= @revenue_collected > 0 ? "#{((@labor_cost / @revenue_collected) * 100).round(1)}%" : "-" %>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding-left: 2rem; color: var(--text-muted);">
+            Worker Daily Wages & Overtime (<%= @total_man_days %> man-days worked, <%= @total_ot_hours %>h OT)
+          </td>
+          <td style="text-align: right;"><%= current_business.formatted_currency(@labor_cost) %></td>
+          <td style="text-align: right; color: var(--text-dim);">-</td>
+        </tr>
+
+        <!-- Operating Expenses Section -->
+        <tr style="background: rgba(255, 255, 255, 0.02); font-weight: 700;">
+          <td style="color: var(--danger-text);">3. OPERATIONAL & PETTY EXPENSES</td>
+          <td style="text-align: right; color: var(--danger-text);">-<%= current_business.formatted_currency(@total_expenses) %></td>
+          <td style="text-align: right; color: var(--danger-text);">
+            <%= @revenue_collected > 0 ? "#{((@total_expenses / @revenue_collected) * 100).round(1)}%" : "-" %>
+          </td>
+        </tr>
+        <% @expenses_by_category.each do |cat, amt| %>
+          <tr>
+            <td style="padding-left: 2rem; color: var(--text-muted);">
+              <span><%= cat&.icon %></span> <%= cat&.name || "General Overhead" %>
+            </td>
+            <td style="text-align: right;"><%= current_business.formatted_currency(amt) %></td>
+            <td style="text-align: right; color: var(--text-dim);">
+              <%= @revenue_collected > 0 ? "#{((amt / @revenue_collected) * 100).round(1)}%" : "-" %>
+            </td>
+          </tr>
+        <% end %>
+
+        <!-- Net Summary -->
+        <tr style="border-top: 3px solid var(--border-subtle); font-size: 1.15rem; font-weight: 800; background: rgba(0, 0, 0, 0.3);">
+          <td style="color: #fff;">NET PROFIT / LOSS</td>
+          <td style="text-align: right; color: <%= @cash_net_profit >= 0 ? 'var(--success-text)' : 'var(--danger-text)' %>;">
+            <%= current_business.formatted_currency(@cash_net_profit) %>
+          </td>
+          <td style="text-align: right; color: <%= @cash_net_profit >= 0 ? 'var(--success-text)' : 'var(--danger-text)' %>;">
+            <%= @revenue_collected > 0 ? "#{((@cash_net_profit / @revenue_collected) * 100).round(1)}%" : "-" %>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

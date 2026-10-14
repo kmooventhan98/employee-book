@@ -1,0 +1,60 @@
+<div style="text-align: center; margin-bottom: 2rem;">
+  <div class="brand-icon" style="width: 54px; height: 54px; font-size: 1.6rem; margin: 0 auto 1rem;">KB</div>
+  <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">Create Business Account</h2>
+  <p style="color: var(--text-muted); font-size: 0.88rem;">Start managing laborers, attendance, and profits on the go</p>
+</div>
+
+<%= form_with url: registration_path, local: true do |f| %>
+  <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-subtle);">
+    <h3 style="font-size: 0.95rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">1. Business Details</h3>
+
+    <div class="form-group">
+      <label class="form-label">Business / Workshop Name *</label>
+      <%= text_field_tag "business[name]", @business&.name, required: true, placeholder: "e.g. Apex Engineering Works or Royal Caterers", class: "form-control" %>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Currency Symbol</label>
+        <%= select_tag "business[currency_symbol]", options_for_select([["₹ (Rupee)", "₹"], ["$ (Dollar)", "$"], ["€ (Euro)", "€"], ["£ (Pound)", "£"], ["AED", "AED"]], @business&.currency_symbol || "₹"), class: "form-select" %>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone / WhatsApp</label>
+        <%= text_field_tag "business[phone]", @business&.phone, placeholder: "+91 98765 43210", class: "form-control" %>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 1.5rem;">
+    <h3 style="font-size: 0.95rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">2. Owner Login Credentials</h3>
+
+    <div class="form-group">
+      <label class="form-label">Your Full Name *</label>
+      <%= text_field_tag "user[full_name]", @user&.full_name, required: true, placeholder: "e.g. Ramesh Kumar", class: "form-control" %>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Email Address *</label>
+      <%= email_field_tag "user[email_address]", @user&.email_address, required: true, placeholder: "ramesh@apexengg.com", class: "form-control" %>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Password *</label>
+        <%= password_field_tag "user[password]", nil, required: true, placeholder: "••••••••", class: "form-control" %>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password *</label>
+        <%= password_field_tag "user[password_confirmation]", nil, required: true, placeholder: "••••••••", class: "form-control" %>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 1.5rem;">
+    <%= f.submit "Create Business & Get Started →", class: "btn btn-primary btn-lg", style: "width: 100%;" %>
+  </div>
+<% end %>
+
+<div style="margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid var(--border-subtle); text-align: center; font-size: 0.85rem; color: var(--text-muted);">
+  Already have a business registered? <%= link_to "Sign In", new_session_path, style: "color: #818cf8; font-weight: 600;" %>
+</div>

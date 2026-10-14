@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= content_for(:title) ? "#{content_for(:title)} — KarigarBook" : "KarigarBook — Small Business Labor & Financial OS" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="KarigarBook">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0a0e17">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body>
+    <% if authenticated? && current_business.present? %>
+      <div class="app-layout">
+        <!-- Desktop Sidebar -->
+        <aside class="sidebar">
+          <div class="sidebar-header">
+            <div class="brand-icon">KB</div>
+            <div class="brand-info">
+              <h1><%= current_business.name %></h1>
+              <span class="brand-badge"><%= current_business.currency_code %> (<%= current_business.currency_symbol %>)</span>
+            </div>
+          </div>
+
+          <nav class="nav-group">
+            <div class="nav-label">Main</div>
+            <%= link_to root_path, class: "nav-link #{'active' if current_page?(root_path)}" do %>
+              <span class="nav-icon">📊</span> Dashboard
+            <% end %>
+
+            <div class="nav-label">Labor & Wages</div>
+            <%= link_to bulk_attendances_path, class: "nav-link #{'active' if request.path.include?('attendances')}" do %>
+              <span class="nav-icon">📝</span> Daily Attendance
+            <% end %>
+            <%= link_to employees_path, class: "nav-link #{'active' if request.path.include?('employees')}" do %>
+              <span class="nav-icon">👷</span> Employees & Wages
+            <% end %>
+
+            <div class="nav-label">Finance & Jobs</div>
+            <%= link_to expenses_path, class: "nav-link #{'active' if request.path.include?('expenses')}" do %>
+              <span class="nav-icon">☕</span> Daily Expenses
+            <% end %>
+            <%= link_to work_projects_path, class: "nav-link #{'active' if request.path.include?('work_projects')}" do %>
+              <span class="nav-icon">🏗️</span> Works / Projects
+            <% end %>
+            <%= link_to invoices_path, class: "nav-link #{'active' if request.path.include?('invoices')}" do %>
+              <span class="nav-icon">🧾</span> Invoices & Quotes
+            <% end %>
+            <%= link_to clients_path, class: "nav-link #{'active' if request.path.include?('clients')}" do %>
+              <span class="nav-icon">👥</span> Clients
+            <% end %>
+
+            <div class="nav-label">Reports</div>
+            <%= link_to pnl_report_path, class: "nav-link #{'active' if current_page?(pnl_report_path)}" do %>
+              <span class="nav-icon">📈</span> Monthly P&L
+            <% end %>
+            <div class="nav-label">Settings</div>
+            <%= link_to business_settings_path, class: "nav-link #{'active' if current_page?(business_settings_path)}" do %>
+              <span class="nav-icon">⚙️</span> Drive & Settings
+            <% end %>
+          </nav>
+
+          <div class="sidebar-footer">
+            <div class="user-badge">
+              <div class="user-avatar"><%= current_user.full_name.first.upcase %></div>
+              <div class="user-details">
+                <div class="user-name"><%= current_user.full_name %></div>
+                <div class="user-role"><%= current_user.role %></div>
+              </div>
+            </div>
+            <%= button_to "Sign out", session_path, method: :delete, class: "btn btn-secondary btn-sm", style: "width: 100%;" %>
+          </div>
+        </aside>
+
+        <!-- Main Wrapper -->
+        <div class="main-wrapper">
+          <header class="top-navbar no-print">
+            <div class="page-title">
+              <%= content_for(:page_title) || "Overview" %>
+            </div>
+            <div class="top-actions">
+              <%= link_to "+ Log Attendance", bulk_attendances_path, class: "btn btn-primary btn-sm" %>
+              <%= link_to "+ Expense", new_expense_path, class: "btn btn-secondary btn-sm" %>
+              <%= link_to "+ Invoice", new_invoice_path(doc_type: "invoice"), class: "btn btn-secondary btn-sm" %>
+            </div>
+          </header>
+
+          <main class="content-container">
+            <% if notice.present? %>
+              <div class="alert alert-success">
+                <span>✓</span> <%= notice %>
+              </div>
+            <% end %>
+            <% if alert.present? %>
+              <div class="alert alert-danger">
+                <span>⚠️</span> <%= alert %>
+              </div>
+            <% end %>
+
+            <%= yield %>
+          </main>
+        </div>
+
+        <!-- Mobile Bottom Bar (Thumb navigation) -->
+        <nav class="mobile-bottom-nav no-print">
+          <%= link_to root_path, class: "mobile-nav-item #{'active' if current_page?(root_path)}" do %>
+            <span class="icon">📊</span>
+            <span>Home</span>
+          <% end %>
+          <%= link_to bulk_attendances_path, class: "mobile-nav-item #{'active' if request.path.include?('attendances')}" do %>
+            <span class="icon">📝</span>
+            <span>Attendance</span>
+          <% end %>
+          <%= link_to new_expense_path, class: "mobile-nav-item #{'active' if request.path == new_expense_path}" do %>
+            <span class="icon">☕</span>
+            <span>+Expense</span>
+          <% end %>
+          <%= link_to work_projects_path, class: "mobile-nav-item #{'active' if request.path.include?('work_projects')}" do %>
+            <span class="icon">🏗️</span>
+            <span>Projects</span>
+          <% end %>
+          <%= link_to pnl_report_path, class: "mobile-nav-item #{'active' if request.path.include?('reports')}" do %>
+            <span class="icon">📈</span>
+            <span>P&L</span>
+          <% end %>
+        </nav>
+      </div>
+    <% else %>
+      <!-- Unauthenticated View (Login / Register) -->
+      <div class="auth-wrapper">
+        <div class="auth-card">
+          <% if notice.present? %>
+            <div class="alert alert-success">
+              <span>✓</span> <%= notice %>
+            </div>
+          <% end %>
+          <% if alert.present? %>
+            <div class="alert alert-danger">
+              <span>⚠️</span> <%= alert %>
+            </div>
+          <% end %>
+
+          <%= yield %>
+        </div>
+      </div>
+    <% end %>
+  </body>
+</html>

@@ -1,0 +1,234 @@
+<%= form_with model: project, local: true, id: "project-form" do |f| %>
+  <% if project.errors.any? %>
+    <div class="alert alert-danger">
+      <%= project.errors.full_messages.join(", ") %>
+    </div>
+  <% end %>
+
+  <div class="form-group">
+    <%= f.label :title, "Work / Job / Site Title *", class: "form-label" %>
+    <%= f.text_field :title, required: true, autofocus: true, placeholder: "e.g. Interior Renovation at MG Road or Solar Roof Installation", class: "form-control" %>
+  </div>
+
+  <div class="form-row">
+    <!-- Searchable Client Selector with on-the-fly creation -->
+    <div class="form-group" style="position: relative;">
+      <label class="form-label">Client / Customer</label>
+
+      <%= f.hidden_field :client_id, id: "selected_client_id" %>
+      <input type="hidden" name="new_client_name" id="new_client_name_input" value="" />
+
+      <!-- State 1: Active Selected Client Badge -->
+      <div id="client_selected_display" style="<%= project.client.present? ? 'display: flex;' : 'display: none;' %> justify-content: space-between; align-items: center; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.35); padding: 0.65rem 0.9rem; border-radius: var(--radius-sm);">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 1.1rem;" id="selected_client_icon">👤</span>
+          <div>
+            <div style="font-weight: 700; color: #fff; font-size: 0.92rem;" id="selected_client_name_text">
+              <%= project.client&.name %>
+            </div>
+            <div style="font-size: 0.75rem; color: #cbd5e1;" id="selected_client_subtext">
+              <%= project.client&.company_name.presence || project.client&.phone %>
+            </div>
+          </div>
+        </div>
+        <button type="button" onclick="clearClientSelection();" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.78rem;">
+          ✕ Change
+        </button>
+      </div>
+
+      <!-- State 2: Search Input & Dropdown -->
+      <div id="client_search_container" style="<%= project.client.present? ? 'display: none;' : 'display: block;' %> position: relative;">
+        <div style="position: relative;">
+          <input type="text"
+                 id="client_search_input"
+                 class="form-control"
+                 placeholder="🔍 Search existing client or type to create new..."
+                 autocomplete="off"
+                 onfocus="openClientDropdown();"
+                 oninput="filterClientDropdown(this.value);" />
+        </div>
+
+        <!-- Dropdown Menu -->
+        <div id="client_dropdown_list" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #172033; border: 1px solid var(--border-hover); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); max-height: 280px; overflow-y: auto; z-index: 1000; padding: 4px;">
+          <!-- Dropdown items will be rendered by JS -->
+        </div>
+
+        <!-- Optional Extra Details when creating a new client on the fly -->
+        <div id="new_client_extra_fields" style="display: none; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: var(--radius-sm); padding: 0.75rem; margin-top: 0.5rem;">
+          <div style="font-size: 0.78rem; font-weight: 700; color: var(--success-text); margin-bottom: 0.35rem;">
+            ✨ Creating New Client: <span id="new_client_preview_name" style="color: #fff;"></span>
+          </div>
+          <div class="form-row" style="margin-bottom: 0;">
+            <input type="text" name="new_client_phone" placeholder="Phone / WhatsApp (Optional)" class="form-control" style="font-size: 0.85rem;" />
+            <input type="text" name="new_client_company" placeholder="Company Name (Optional)" class="form-control" style="font-size: 0.85rem;" />
+          </div>
+        </div>
+      </div>
+      <span style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem; display: block;">Select an existing customer or type a new name to create one automatically.</span>
+    </div>
+
+    <div class="form-group">
+      <%= f.label :status, "Job Status", class: "form-label" %>
+      <%= f.select :status, [["In Progress", "in_progress"], ["Quoted / Estimate Stage", "quoted"], ["Completed", "completed"], ["On Hold", "on_hold"], ["Cancelled", "cancelled"]], {}, class: "form-select" %>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <%= f.label :quoted_price, "Contract / Quoted Price (#{current_business.currency_symbol})", class: "form-label" %>
+      <%= f.number_field :quoted_price, step: "100.0", placeholder: "e.g. 50000", class: "form-control", style: "font-size: 1.25rem; font-weight: 700; color: #fff;" %>
+      <span style="font-size: 0.72rem; color: var(--text-dim);">The agreed contract amount or estimate given to client.</span>
+    </div>
+    <div class="form-group">
+      <%= f.label :start_date, "Start Date", class: "form-label" %>
+      <%= f.date_field :start_date, class: "form-control" %>
+    </div>
+    <div class="form-group">
+      <%= f.label :end_date, "Target Completion Date", class: "form-label" %>
+      <%= f.date_field :end_date, class: "form-control" %>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <%= f.label :description, "Scope of Work & Notes", class: "form-label" %>
+    <%= f.text_area :description, rows: 3, placeholder: "Key deliverables, terms, site address, supervisor contact", class: "form-control" %>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+    <%= f.submit project.new_record? ? "Create Work / Project" : "Update Project Details", class: "btn btn-primary btn-lg", style: "flex: 1;" %>
+    <%= link_to "Cancel", work_projects_path, class: "btn btn-secondary" %>
+  </div>
+<% end %>
+
+<script>
+  const existingClients = [
+    <% @clients.each do |c| %>
+      { id: "<%= c.id %>", name: "<%= escape_javascript(c.name) %>", company: "<%= escape_javascript(c.company_name.to_s) %>", phone: "<%= escape_javascript(c.phone.to_s) %>" },
+    <% end %>
+  ];
+
+  function openClientDropdown() {
+    filterClientDropdown(document.getElementById('client_search_input').value);
+  }
+
+  function filterClientDropdown(query) {
+    const dropdown = document.getElementById('client_dropdown_list');
+    dropdown.style.display = 'block';
+    dropdown.innerHTML = '';
+
+    const cleanQuery = (query || '').trim().toLowerCase();
+
+    // Option 1: Walk-in / Direct (None)
+    const noneItem = document.createElement('div');
+    noneItem.style.padding = '8px 12px';
+    noneItem.style.cursor = 'pointer';
+    noneItem.style.borderRadius = '6px';
+    noneItem.style.fontSize = '0.85rem';
+    noneItem.style.color = '#94a3b8';
+    noneItem.innerHTML = '🏢 <em>-- Walk-in / Direct Client (No formal client) --</em>';
+    noneItem.onmouseenter = () => noneItem.style.background = 'rgba(255,255,255,0.06)';
+    noneItem.onmouseleave = () => noneItem.style.background = 'transparent';
+    noneItem.onclick = () => selectClient(null, 'Walk-in / Direct Client', '');
+    dropdown.appendChild(noneItem);
+
+    // Option 2: Filter existing clients
+    const matched = existingClients.filter(c =>
+      c.name.toLowerCase().includes(cleanQuery) ||
+      c.company.toLowerCase().includes(cleanQuery) ||
+      c.phone.includes(cleanQuery)
+    );
+
+    matched.forEach(c => {
+      const item = document.createElement('div');
+      item.style.padding = '8px 12px';
+      item.style.cursor = 'pointer';
+      item.style.borderRadius = '6px';
+      item.style.borderBottom = '1px solid rgba(255,255,255,0.04)';
+      item.onmouseenter = () => item.style.background = 'rgba(99, 102, 241, 0.2)';
+      item.onmouseleave = () => item.style.background = 'transparent';
+
+      const companyText = c.company ? ` (${c.company})` : '';
+      const phoneText = c.phone ? ` • ${c.phone}` : '';
+
+      item.innerHTML = `
+        <div style="font-weight: 600; color: #fff; font-size: 0.9rem;">👤 ${c.name}${companyText}</div>
+        <div style="font-size: 0.75rem; color: #94a3b8;">${phoneText || 'Existing Client'}</div>
+      `;
+      item.onclick = () => selectClient(c.id, c.name, (c.company || c.phone));
+      dropdown.appendChild(item);
+    });
+
+    // Option 3: If query entered, offer "+ Create new client [query]"
+    if (cleanQuery.length > 0) {
+      const createItem = document.createElement('div');
+      createItem.style.padding = '10px 12px';
+      createItem.style.cursor = 'pointer';
+      createItem.style.borderRadius = '6px';
+      createItem.style.background = 'rgba(16, 185, 129, 0.12)';
+      createItem.style.border = '1px dashed rgba(16, 185, 129, 0.4)';
+      createItem.style.marginTop = '4px';
+      createItem.onmouseenter = () => createItem.style.background = 'rgba(16, 185, 129, 0.22)';
+      createItem.onmouseleave = () => createItem.style.background = 'rgba(16, 185, 129, 0.12)';
+
+      createItem.innerHTML = `
+        <div style="font-weight: 700; color: #34d399; font-size: 0.9rem;">✨ + Create New Client "${query.trim()}"</div>
+        <div style="font-size: 0.74rem; color: #cbd5e1;">Will be created automatically and linked to this project</div>
+      `;
+      createItem.onclick = () => selectNewClient(query.trim());
+      dropdown.appendChild(createItem);
+    }
+  }
+
+  function selectClient(id, name, subtext) {
+    document.getElementById('selected_client_id').value = id || '';
+    document.getElementById('new_client_name_input').value = '';
+    document.getElementById('new_client_extra_fields').style.display = 'none';
+
+    document.getElementById('selected_client_icon').innerText = id ? '👤' : '🏢';
+    document.getElementById('selected_client_name_text').innerText = name;
+    document.getElementById('selected_client_subtext').innerText = subtext || (id ? 'Selected Existing Client' : 'Direct Customer');
+
+    document.getElementById('client_search_container').style.display = 'none';
+    document.getElementById('client_selected_display').style.display = 'flex';
+    document.getElementById('client_dropdown_list').style.display = 'none';
+  }
+
+  function selectNewClient(newName) {
+    document.getElementById('selected_client_id').value = '';
+    document.getElementById('new_client_name_input').value = newName;
+
+    document.getElementById('selected_client_icon').innerText = '✨';
+    document.getElementById('selected_client_name_text').innerText = newName;
+    document.getElementById('selected_client_subtext').innerText = 'New Client (Will be created on save)';
+
+    document.getElementById('new_client_preview_name').innerText = newName;
+    document.getElementById('new_client_extra_fields').style.display = 'block';
+
+    document.getElementById('client_search_container').style.display = 'none';
+    document.getElementById('client_selected_display').style.display = 'flex';
+    document.getElementById('client_dropdown_list').style.display = 'none';
+  }
+
+  function clearClientSelection() {
+    document.getElementById('selected_client_id').value = '';
+    document.getElementById('new_client_name_input').value = '';
+    document.getElementById('new_client_extra_fields').style.display = 'none';
+
+    document.getElementById('client_selected_display').style.display = 'none';
+    document.getElementById('client_search_container').style.display = 'block';
+
+    const input = document.getElementById('client_search_input');
+    input.value = '';
+    input.focus();
+    openClientDropdown();
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function(e) {
+    const container = document.getElementById('client_search_container');
+    const dropdown = document.getElementById('client_dropdown_list');
+    if (container && !container.contains(e.target)) {
+      dropdown.style.display = 'none';
+    }
+  });
+</script>

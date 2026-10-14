@@ -1,0 +1,226 @@
+<% content_for :page_title do %>
+  <span>Employee: <%= @employee.name %></span>
+<% end %>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff;"><%= @employee.name %></h2>
+      <span class="badge <%= @employee.status == 'active' ? 'badge-success' : 'badge-danger' %>"><%= @employee.status.capitalize %></span>
+      <span class="badge badge-neutral"><%= @employee.wage_type.capitalize %> Wage</span>
+    </div>
+    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem;">
+      <%= @employee.role_title.presence || "General Worker" %> • Phone: <%= @employee.phone.presence || "N/A" %> • Joined: <%= @employee.joined_date&.strftime("%d %b %Y") || "N/A" %>
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <%= link_to "💸 + Give Cash Advance", new_employee_advance_payment_path(@employee), class: "btn btn-warning" %>
+    <%= link_to "💵 + Settle Wage Payout", new_employee_wage_payout_path(@employee), class: "btn btn-success" %>
+    <%= link_to "Edit Details", edit_employee_path(@employee), class: "btn btn-secondary" %>
+    <%= link_to "← Staff List", employees_path, class: "btn btn-secondary" %>
+  </div>
+</div>
+
+<!-- Financial Summary Cards for this worker -->
+<div class="stats-grid" style="margin-bottom: 1.5rem;">
+  <div class="stat-card primary">
+    <div class="stat-icon primary">💵</div>
+    <div class="stat-meta">
+      <div class="stat-label">Base Rate / Pay</div>
+      <div class="stat-value"><%= current_business.formatted_currency(@employee.base_rate) %></div>
+      <div class="stat-subtext">per <%= @employee.wage_type == 'daily' ? 'day' : (@employee.wage_type == 'weekly' ? 'week' : 'month') %> • OT: <%= current_business.formatted_currency(@employee.overtime_hourly_rate) %>/hr</div>
+    </div>
+  </div>
+
+  <div class="stat-card warning">
+    <div class="stat-icon warning">💸</div>
+    <div class="stat-meta">
+      <div class="stat-label">Pending Advances (Khata)</div>
+      <div class="stat-value" style="color: var(--warning-text);"><%= current_business.formatted_currency(@pending_advances) %></div>
+      <div class="stat-subtext">Unrecovered balance taken in advance</div>
+    </div>
+  </div>
+
+  <div class="stat-card success">
+    <div class="stat-icon success">🗓️</div>
+    <div class="stat-meta">
+      <div class="stat-label">This Month Worked</div>
+      <div class="stat-value"><%= @days_present %> Full / <%= @days_half %> Half</div>
+      <div class="stat-subtext"><%= @total_ot_hours %>h Overtime • Accrued: <%= current_business.formatted_currency(@accrued_month_wage) %></div>
+    </div>
+  </div>
+
+  <div class="stat-card info">
+    <div class="stat-icon info">💼</div>
+    <div class="stat-meta">
+      <div class="stat-label">Estimated Net Payable</div>
+      <div class="stat-value" style="color: #38bdf8;">
+        <%= current_business.formatted_currency([@accrued_month_wage - @pending_advances, 0.0].max) %>
+      </div>
+      <div class="stat-subtext">Accrued Wage − Pending Advances</div>
+    </div>
+  </div>
+</div>
+
+<!-- Tabs / Sections: Advances, Payouts, Attendance -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+
+  <!-- Advance Payments (Khata) Section -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span>💸</span> Cash Advances & Borrowings (Khata)
+      </div>
+      <%= link_to "+ New Advance", new_employee_advance_payment_path(@employee), class: "btn btn-secondary btn-sm" %>
+    </div>
+
+    <% if @advance_payments.empty? %>
+      <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+        No advances logged for <%= @employee.name %>.
+      </div>
+    <% else %>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Mode</th>
+              <th>Reason</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @advance_payments.each do |adv| %>
+              <tr>
+                <td><%= adv.date.strftime("%d %b %Y") %></td>
+                <td style="font-weight: 700; color: #fff;"><%= current_business.formatted_currency(adv.amount) %></td>
+                <td><span class="badge badge-neutral"><%= adv.payment_mode.upcase %></span></td>
+                <td><%= adv.reason.presence || "-" %></td>
+                <td>
+                  <% if adv.is_recovered %>
+                    <span class="badge badge-success">✓ Deducted</span>
+                  <% else %>
+                    <span class="badge badge-warning">Pending</span>
+                  <% end %>
+                </td>
+                <td>
+                  <% unless adv.is_recovered %>
+                    <%= button_to "Delete", employee_advance_payment_path(@employee, adv), method: :delete, data: { turbo_confirm: "Delete this advance record?" }, class: "btn btn-danger btn-sm" %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Wage Payouts History -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span>💵</span> Wage Payout Settlements
+      </div>
+      <%= link_to "+ Settle Payout", new_employee_wage_payout_path(@employee), class: "btn btn-secondary btn-sm" %>
+    </div>
+
+    <% if @wage_payouts.empty? %>
+      <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+        No wage payouts settled yet.
+      </div>
+    <% else %>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Paid Date</th>
+              <th>Period</th>
+              <th>Gross</th>
+              <th>Advance Cut</th>
+              <th>Net Disbursed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @wage_payouts.each do |po| %>
+              <tr>
+                <td><%= po.payment_date.strftime("%d %b %Y") %></td>
+                <td style="font-size: 0.8rem; color: var(--text-dim);">
+                  <%= po.period_start&.strftime("%d %b") %> – <%= po.period_end&.strftime("%d %b %Y") %>
+                </td>
+                <td><%= current_business.formatted_currency(po.gross_wage) %></td>
+                <td style="color: var(--danger-text);">-<%= current_business.formatted_currency(po.advances_deducted) %></td>
+                <td style="font-weight: 700; color: var(--success-text);">
+                  <%= current_business.formatted_currency(po.net_paid) %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- Recent Attendance Records -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <span>🗓️</span> Recent Attendance History
+    </div>
+    <%= link_to "Go to Attendance Sheet →", bulk_attendances_path, class: "btn btn-secondary btn-sm" %>
+  </div>
+
+  <% if @attendances.empty? %>
+    <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+      No attendance recorded yet.
+    </div>
+  <% else %>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Work / Project</th>
+            <th>Status</th>
+            <th>Overtime</th>
+            <th>Calculated Wage</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @attendances.each do |att| %>
+            <tr>
+              <td><%= att.date.strftime("%a, %d %b %Y") %></td>
+              <td>
+                <% if att.work_project %>
+                  <%= link_to att.work_project.title, work_project_path(att.work_project) %>
+                <% else %>
+                  <span style="color: var(--text-dim);">General / Shop Floor</span>
+                <% end %>
+              </td>
+              <td>
+                <% case att.status %>
+                <% when "present" %>
+                  <span class="badge badge-success">Present</span>
+                <% when "half_day" %>
+                  <span class="badge badge-warning">Half Day</span>
+                <% when "absent" %>
+                  <span class="badge badge-danger">Absent</span>
+                <% when "paid_leave" %>
+                  <span class="badge badge-info">Paid Leave</span>
+                <% end %>
+              </td>
+              <td><%= att.overtime_hours > 0 ? "#{att.overtime_hours} hrs" : "-" %></td>
+              <td style="font-weight: 700; color: #fff;"><%= current_business.formatted_currency(att.wage_amount) %></td>
+              <td><%= att.notes.presence || "-" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>

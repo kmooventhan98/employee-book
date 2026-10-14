@@ -1,0 +1,195 @@
+<%= form_with model: invoice, local: true, id: "invoice-form" do |f| %>
+  <% if invoice.errors.any? %>
+    <div class="alert alert-danger">
+      <%= invoice.errors.full_messages.join(", ") %>
+    </div>
+  <% end %>
+
+  <div class="form-row">
+    <div class="form-group">
+      <%= f.label :doc_type, "Document Type *", class: "form-label" %>
+      <%= f.select :doc_type, [["Tax Invoice (Bill)", "invoice"], ["Quotation (Estimate)", "quotation"]], {}, class: "form-select", onchange: "document.getElementById('invoice-type-heading').innerText = this.value === 'quotation' ? 'Quotation / Estimate' : 'Tax Invoice';" %>
+    </div>
+    <div class="form-group">
+      <%= f.label :invoice_number, "Document Number *", class: "form-label" %>
+      <%= f.text_field :invoice_number, required: true, class: "form-control", style: "font-weight: 700; color: #fff;" %>
+    </div>
+    <div class="form-group">
+      <%= f.label :status, "Status", class: "form-label" %>
+      <%= f.select :status, [["Draft", "draft"], ["Sent", "sent"], ["Accepted", "accepted"], ["Paid", "paid"], ["Cancelled", "cancelled"]], {}, class: "form-select" %>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <%= f.label :client_id, "Client / Customer", class: "form-label" %>
+      <%= f.select :client_id, [["-- Walk-in / Direct Client --", ""]] + @clients.map { |c| [c.display_name, c.id] }, {}, class: "form-select" %>
+    </div>
+    <div class="form-group">
+      <%= f.label :work_project_id, "Link to Work / Project (Optional)", class: "form-label" %>
+      <%= f.select :work_project_id, [["-- None (General Service/Product) --", ""]] + @projects.map { |p| ["#{p.title} (#{p.client&.name || 'Direct'})", p.id] }, {}, class: "form-select" %>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <%= f.label :issue_date, "Date Issued *", class: "form-label" %>
+      <%= f.date_field :issue_date, required: true, class: "form-control" %>
+    </div>
+    <div class="form-group">
+      <%= f.label :due_date, "Payment Due Date", class: "form-label" %>
+      <%= f.date_field :due_date, class: "form-control" %>
+    </div>
+  </div>
+
+  <!-- Line Items Section -->
+  <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h3 style="font-size: 1rem; font-weight: 700; color: #fff;">📦 Line Items & Services</h3>
+      <button type="button" onclick="addInvoiceItemRow();" class="btn btn-secondary btn-sm">+ Add Item Row</button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table" id="items-table">
+        <thead>
+          <tr>
+            <th style="min-width: 250px;">Item / Service Description *</th>
+            <th style="width: 100px;">Qty</th>
+            <th style="width: 140px;">Unit Rate (<%= current_business.currency_symbol %>)</th>
+            <th style="width: 140px;">Total</th>
+            <th style="width: 50px;"></th>
+          </tr>
+        </thead>
+        <tbody id="items-tbody">
+          <%= f.fields_for :invoice_items do |item_f| %>
+            <tr class="item-row">
+              <td>
+                <%= item_f.text_field :description, required: true, placeholder: "e.g. Fabrication labor, Raw materials, Transport", class: "form-control item-desc" %>
+              </td>
+              <td>
+                <%= item_f.number_field :quantity, step: "0.1", min: "0.1", class: "form-control item-qty", oninput: "calculateInvoiceTotals();" %>
+              </td>
+              <td>
+                <%= item_f.number_field :unit_price, step: "0.5", class: "form-control item-rate", oninput: "calculateInvoiceTotals();" %>
+              </td>
+              <td>
+                <span class="item-total-display" style="font-weight: 700; color: #fff;"><%= current_business.currency_symbol %>0.00</span>
+              </td>
+              <td>
+                <%= item_f.hidden_field :_destroy, class: "destroy-field" %>
+                <button type="button" onclick="removeInvoiceItemRow(this);" class="btn btn-danger btn-sm" style="padding: 0.2rem 0.5rem;">✕</button>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Calculations Summary -->
+    <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+      <div style="width: 320px; display: flex; flex-direction: column; gap: 0.75rem;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+          <span style="color: var(--text-muted);">Subtotal:</span>
+          <span id="subtotal-display" style="font-weight: 700; color: #fff;"><%= current_business.formatted_currency(invoice.subtotal) %></span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+          <span style="color: var(--text-muted); font-size: 0.85rem;">Discount (<%= current_business.currency_symbol %>):</span>
+          <%= f.number_field :discount_amount, step: "1.0", value: invoice.discount_amount || 0, class: "form-control", style: "width: 120px; text-align: right;", oninput: "calculateInvoiceTotals();", id: "discount-input" %>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+          <span style="color: var(--text-muted); font-size: 0.85rem;">Tax / GST (%):</span>
+          <%= f.number_field :tax_rate, step: "0.1", value: invoice.tax_rate || 0, class: "form-control", style: "width: 120px; text-align: right;", oninput: "calculateInvoiceTotals();", id: "tax-rate-input" %>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+          <span style="color: var(--text-muted);">Tax Amount:</span>
+          <span id="tax-amount-display" style="font-weight: 600; color: #fff;"><%= current_business.formatted_currency(invoice.tax_amount) %></span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: 800; border-top: 2px solid var(--border-subtle); padding-top: 0.75rem; color: #fff;">
+          <span>Total Amount:</span>
+          <span id="total-amount-display" style="color: #34d399;"><%= current_business.formatted_currency(invoice.total_amount) %></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <%= f.label :terms, "Terms & Conditions / Payment Instructions (UPI ID / Bank details)", class: "form-label" %>
+      <%= f.text_area :terms, rows: 2, placeholder: "Payment due within 15 days. GPay/PhonePe to 9876543210@upi or Bank: State Bank of India...", class: "form-control" %>
+    </div>
+    <div class="form-group">
+      <%= f.label :notes, "Client Notes", class: "form-label" %>
+      <%= f.text_area :notes, rows: 2, placeholder: "Thank you for your business!", class: "form-control" %>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+    <%= f.submit invoice.new_record? ? "Save & Create Document" : "Update Document", class: "btn btn-primary btn-lg", style: "flex: 1;" %>
+    <%= link_to "Cancel", invoices_path, class: "btn btn-secondary" %>
+  </div>
+<% end %>
+
+<script>
+  function calculateInvoiceTotals() {
+    let subtotal = 0;
+    const rows = document.querySelectorAll("#items-tbody tr.item-row");
+    rows.forEach(row => {
+      if (row.style.display !== "none") {
+        const qty = parseFloat(row.querySelector(".item-qty").value) || 0;
+        const rate = parseFloat(row.querySelector(".item-rate").value) || 0;
+        const rowTotal = qty * rate;
+        row.querySelector(".item-total-display").innerText = "<%= current_business.currency_symbol %>" + rowTotal.toFixed(2);
+        subtotal += rowTotal;
+      }
+    });
+
+    const discount = parseFloat(document.getElementById("discount-input").value) || 0;
+    const taxable = Math.max(subtotal - discount, 0);
+    const taxRate = parseFloat(document.getElementById("tax-rate-input").value) || 0;
+    const taxAmount = taxable * (taxRate / 100);
+    const total = taxable + taxAmount;
+
+    document.getElementById("subtotal-display").innerText = "<%= current_business.currency_symbol %>" + subtotal.toFixed(2);
+    document.getElementById("tax-amount-display").innerText = "<%= current_business.currency_symbol %>" + taxAmount.toFixed(2);
+    document.getElementById("total-amount-display").innerText = "<%= current_business.currency_symbol %>" + total.toFixed(2);
+  }
+
+  let itemIndex = <%= invoice.invoice_items.size %> + 10;
+  function addInvoiceItemRow() {
+    const tbody = document.getElementById("items-tbody");
+    const tr = document.createElement("tr");
+    tr.className = "item-row";
+    tr.innerHTML = `
+      <td><input type="text" name="invoice[invoice_items_attributes][${itemIndex}][description]" required placeholder="Description" class="form-control item-desc" /></td>
+      <td><input type="number" step="0.1" min="0.1" value="1" name="invoice[invoice_items_attributes][${itemIndex}][quantity]" class="form-control item-qty" oninput="calculateInvoiceTotals();" /></td>
+      <td><input type="number" step="0.5" value="0" name="invoice[invoice_items_attributes][${itemIndex}][unit_price]" class="form-control item-rate" oninput="calculateInvoiceTotals();" /></td>
+      <td><span class="item-total-display" style="font-weight: 700; color: #fff;"><%= current_business.currency_symbol %>0.00</span></td>
+      <td>
+        <input type="hidden" name="invoice[invoice_items_attributes][${itemIndex}][_destroy]" value="false" class="destroy-field" />
+        <button type="button" onclick="removeInvoiceItemRow(this);" class="btn btn-danger btn-sm" style="padding: 0.2rem 0.5rem;">✕</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+    itemIndex++;
+    calculateInvoiceTotals();
+  }
+
+  function removeInvoiceItemRow(btn) {
+    const row = btn.closest("tr");
+    const destroyField = row.querySelector(".destroy-field");
+    if (destroyField) {
+      destroyField.value = "1";
+      row.style.display = "none";
+    } else {
+      row.remove();
+    }
+    calculateInvoiceTotals();
+  }
+
+  document.addEventListener("DOMContentLoaded", calculateInvoiceTotals);
+  calculateInvoiceTotals();
+</script>

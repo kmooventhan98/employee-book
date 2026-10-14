@@ -1,0 +1,21 @@
+<% content_for :page_title do %>
+  <span>New <%= @invoice.doc_type == "quotation" ? "Quotation" : "Invoice" %></span>
+<% end %>
+
+<div style="max-width: 850px; margin: 0 auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div>
+      <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff;" id="invoice-type-heading">
+        <%= @invoice.doc_type == "quotation" ? "📋 Create Quotation (Estimate)" : "🧾 Create Tax Invoice" %>
+      </h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem;">
+        Generate and share formal billing with clients
+      </p>
+    </div>
+    <%= link_to "← Documents List", invoices_path, class: "btn btn-secondary btn-sm" %>
+  </div>
+
+  <div class="card">
+    <%= render "form", invoice: @invoice %>
+  </div>
+</div>

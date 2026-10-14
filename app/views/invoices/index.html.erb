@@ -1,0 +1,133 @@
+<% content_for :page_title do %>
+  <span>Invoices & Quotations</span>
+<% end %>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff;">Invoices & Quotations (Estimates)</h2>
+    <p style="color: var(--text-muted); font-size: 0.85rem;">Issue estimates, convert them to tax invoices, and track payments</p>
+  </div>
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <%= link_to "+ New Quotation", new_invoice_path(doc_type: "quotation"), class: "btn btn-secondary" %>
+    <%= link_to "+ New Tax Invoice", new_invoice_path(doc_type: "invoice"), class: "btn btn-primary" %>
+  </div>
+</div>
+
+<!-- Financial Summary Cards -->
+<div class="stats-grid" style="margin-bottom: 1.5rem;">
+  <div class="stat-card primary">
+    <div class="stat-icon primary">🧾</div>
+    <div class="stat-meta">
+      <div class="stat-label">Total Invoiced</div>
+      <div class="stat-value"><%= current_business.formatted_currency(@total_invoiced) %></div>
+    </div>
+  </div>
+
+  <div class="stat-card success">
+    <div class="stat-icon success">💰</div>
+    <div class="stat-meta">
+      <div class="stat-label">Total Collected</div>
+      <div class="stat-value" style="color: var(--success-text);"><%= current_business.formatted_currency(@total_paid) %></div>
+    </div>
+  </div>
+
+  <div class="stat-card warning">
+    <div class="stat-icon warning">⏳</div>
+    <div class="stat-meta">
+      <div class="stat-label">Pending Dues</div>
+      <div class="stat-value" style="color: var(--warning-text);"><%= current_business.formatted_currency(@total_due) %></div>
+    </div>
+  </div>
+
+  <div class="stat-card info">
+    <div class="stat-icon info">📋</div>
+    <div class="stat-meta">
+      <div class="stat-label">Open Quotations Value</div>
+      <div class="stat-value" style="color: var(--info-text);"><%= current_business.formatted_currency(@total_quotes) %></div>
+    </div>
+  </div>
+</div>
+
+<!-- Tabs: All, Invoices, Quotations -->
+<div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+  <%= link_to "All Documents", invoices_path, class: "btn btn-sm #{params[:doc_type].blank? ? 'btn-primary' : 'btn-secondary'}" %>
+  <%= link_to "Tax Invoices Only", invoices_path(doc_type: "invoice"), class: "btn btn-sm #{params[:doc_type] == 'invoice' ? 'btn-primary' : 'btn-secondary'}" %>
+  <%= link_to "Quotations Only", invoices_path(doc_type: "quotation"), class: "btn btn-sm #{params[:doc_type] == 'quotation' ? 'btn-primary' : 'btn-secondary'}" %>
+</div>
+
+<div class="card">
+  <% if @invoices.empty? %>
+    <div style="text-align: center; padding: 3rem 1rem;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🧾</div>
+      <h3 style="color: #fff; margin-bottom: 0.5rem;">No documents created yet</h3>
+      <p style="color: var(--text-muted); margin-bottom: 1.25rem;">Create a quotation for a client or bill them directly.</p>
+      <%= link_to "+ Create First Quotation", new_invoice_path(doc_type: "quotation"), class: "btn btn-secondary btn-sm" %>
+      <%= link_to "+ Create First Invoice", new_invoice_path(doc_type: "invoice"), class: "btn btn-primary btn-sm" %>
+    </div>
+  <% else %>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Number</th>
+            <th>Client</th>
+            <th>Work / Project</th>
+            <th>Date</th>
+            <th>Total Amount</th>
+            <th>Due / Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @invoices.each do |inv| %>
+            <tr>
+              <td>
+                <span class="badge <%= inv.quotation? ? 'badge-info' : 'badge-neutral' %>">
+                  <%= inv.doc_type.capitalize %>
+                </span>
+              </td>
+              <td>
+                <div style="font-weight: 700; color: #fff;">
+                  <%= link_to inv.invoice_number, invoice_path(inv) %>
+                </div>
+              </td>
+              <td><%= inv.client&.display_name || "Direct Client" %></td>
+              <td>
+                <% if inv.work_project %>
+                  <%= link_to inv.work_project.title, work_project_path(inv.work_project) %>
+                <% else %>
+                  <span style="color: var(--text-dim);">-</span>
+                <% end %>
+              </td>
+              <td><%= inv.issue_date.strftime("%d %b %Y") %></td>
+              <td style="font-weight: 700; color: #fff;">
+                <%= current_business.formatted_currency(inv.total_amount) %>
+              </td>
+              <td>
+                <% if inv.invoice? %>
+                  <span class="badge <%= inv.status == 'paid' ? 'badge-success' : (inv.status == 'partial' ? 'badge-warning' : 'badge-danger') %>">
+                    <%= inv.status.capitalize %>
+                  </span>
+                  <% if inv.balance_amount > 0 %>
+                    <div style="font-size: 0.75rem; color: #fbbf24; margin-top: 2px;">
+                      Due: <%= current_business.formatted_currency(inv.balance_amount) %>
+                    </div>
+                  <% end %>
+                <% else %>
+                  <span class="badge badge-info"><%= inv.status.capitalize %></span>
+                <% end %>
+              </td>
+              <td>
+                <div style="display: flex; gap: 0.35rem;">
+                  <%= link_to "View", invoice_path(inv), class: "btn btn-secondary btn-sm" %>
+                  <%= link_to "Print", print_invoice_path(inv), target: "_blank", class: "btn btn-secondary btn-sm" %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,122 @@
+<% content_for :page_title do %>
+  <span>Client: <%= @client.name %></span>
+<% end %>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff;"><%= @client.name %></h2>
+    <p style="color: var(--text-muted); font-size: 0.85rem;">
+      <%= @client.company_name.presence || "Individual Client" %> • Phone: <%= @client.phone %> • <%= @client.email %>
+    </p>
+  </div>
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <%= link_to "+ New Project for Client", new_work_project_path(client_id: @client.id), class: "btn btn-secondary btn-sm" %>
+    <%= link_to "🧾 + Create Invoice", new_invoice_path(client_id: @client.id, doc_type: "invoice"), class: "btn btn-primary btn-sm" %>
+    <%= link_to "Edit Client", edit_client_path(@client), class: "btn btn-secondary btn-sm" %>
+    <%= link_to "← Clients List", clients_path, class: "btn btn-secondary btn-sm" %>
+  </div>
+</div>
+
+<!-- Financial Summary for this Client -->
+<div class="stats-grid" style="margin-bottom: 1.5rem;">
+  <div class="stat-card primary">
+    <div class="stat-icon primary">🧾</div>
+    <div class="stat-meta">
+      <div class="stat-label">Total Invoiced</div>
+      <div class="stat-value"><%= current_business.formatted_currency(@total_billed) %></div>
+    </div>
+  </div>
+
+  <div class="stat-card success">
+    <div class="stat-icon success">💰</div>
+    <div class="stat-meta">
+      <div class="stat-label">Total Payments Received</div>
+      <div class="stat-value" style="color: var(--success-text);"><%= current_business.formatted_currency(@total_paid) %></div>
+    </div>
+  </div>
+
+  <div class="stat-card warning">
+    <div class="stat-icon warning">⏳</div>
+    <div class="stat-meta">
+      <div class="stat-label">Outstanding Balance Due</div>
+      <div class="stat-value" style="color: var(--warning-text);"><%= current_business.formatted_currency(@total_due) %></div>
+    </div>
+  </div>
+</div>
+
+<!-- Client's Projects and Invoices -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem;">
+  <!-- Projects -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span>🏗️</span> Associated Works / Projects
+      </div>
+      <%= link_to "+ Project", new_work_project_path(client_id: @client.id), class: "btn btn-secondary btn-sm" %>
+    </div>
+    <% if @projects.empty? %>
+      <div style="text-align: center; padding: 2rem; color: var(--text-muted);">No projects associated yet.</div>
+    <% else %>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Status</th>
+              <th>Quoted</th>
+              <th>Net Profit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @projects.each do |p| %>
+              <tr>
+                <td><%= link_to p.title, work_project_path(p), style: "font-weight: 600; color: #fff;" %></td>
+                <td><span class="badge badge-info"><%= p.status.titleize %></span></td>
+                <td><%= current_business.formatted_currency(p.quoted_price) %></td>
+                <td style="color: <%= p.net_profit >= 0 ? 'var(--success-text)' : 'var(--danger-text)' %>; font-weight: 700;">
+                  <%= current_business.formatted_currency(p.net_profit) %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Invoices -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span>🧾</span> Billing History
+      </div>
+      <%= link_to "+ Invoice", new_invoice_path(client_id: @client.id, doc_type: "invoice"), class: "btn btn-secondary btn-sm" %>
+    </div>
+    <% if @invoices.empty? %>
+      <div style="text-align: center; padding: 2rem; color: var(--text-muted);">No invoices generated yet.</div>
+    <% else %>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Invoice #</th>
+              <th>Date</th>
+              <th>Total</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @invoices.each do |inv| %>
+              <tr>
+                <td><%= link_to inv.invoice_number, invoice_path(inv), style: "font-weight: 600; color: #fff;" %></td>
+                <td><%= inv.issue_date.strftime("%d %b %Y") %></td>
+                <td style="font-weight: 700;"><%= current_business.formatted_currency(inv.total_amount) %></td>
+                <td><span class="badge badge-success"><%= inv.status.capitalize %></span></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </div>
+</div>

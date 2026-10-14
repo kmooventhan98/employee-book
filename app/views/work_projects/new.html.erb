@@ -1,0 +1,17 @@
+<% content_for :page_title do %>
+  <span>New Work / Project</span>
+<% end %>
+
+<div style="max-width: 750px; margin: 0 auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div>
+      <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff;">🏗️ Start New Work / Project</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem;">Set up job details to start logging labor attendance and expenses against it</p>
+    </div>
+    <%= link_to "← Works List", work_projects_path, class: "btn btn-secondary btn-sm" %>
+  </div>
+
+  <div class="card">
+    <%= render "form", project: @project %>
+  </div>
+</div>

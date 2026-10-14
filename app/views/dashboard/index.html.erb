@@ -1,0 +1,298 @@
+<% content_for :page_title do %>
+  <span>Dashboard Overview</span>
+<% end %>
+
+<!-- Top Welcome & Date Banner -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.2rem;">
+      Hello, <%= current_user.full_name %> 👋
+    </h2>
+    <p style="color: var(--text-muted); font-size: 0.88rem;">
+      <%= Date.current.strftime("%A, %d %B %Y") %> • Business: <strong style="color: #fff;"><%= current_business.name %></strong>
+    </p>
+  </div>
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <%= link_to "📝 Mark Today's Attendance", bulk_attendances_path, class: "btn btn-primary" %>
+    <%= link_to "☕ + Tea / Food Expense", new_expense_path, class: "btn btn-secondary" %>
+    <%= link_to "🏗️ + New Project", new_work_project_path, class: "btn btn-secondary" %>
+  </div>
+</div>
+
+<!-- Primary Financial Stats Grid -->
+<div class="stats-grid">
+  <!-- Monthly Net Profit / Loss -->
+  <div class="stat-card <%= @monthly_net_profit >= 0 ? 'success' : 'danger' %>">
+    <div class="stat-icon <%= @monthly_net_profit >= 0 ? 'success' : 'danger' %>">
+      <%= @monthly_net_profit >= 0 ? '💰' : '📉' %>
+    </div>
+    <div class="stat-meta">
+      <div class="stat-label">This Month's Net Profit</div>
+      <div class="stat-value" style="color: <%= @monthly_net_profit >= 0 ? 'var(--success-text)' : 'var(--danger-text)' %>;">
+        <%= current_business.formatted_currency(@monthly_net_profit) %>
+      </div>
+      <div class="stat-subtext">Revenue − (Labor + Expenses)</div>
+    </div>
+  </div>
+
+  <!-- Revenue Collected -->
+  <div class="stat-card primary">
+    <div class="stat-icon primary">📈</div>
+    <div class="stat-meta">
+      <div class="stat-label">Revenue Collected</div>
+      <div class="stat-value"><%= current_business.formatted_currency(@monthly_revenue) %></div>
+      <div class="stat-subtext">Payments received this month</div>
+    </div>
+  </div>
+
+  <!-- Labor & Wages -->
+  <div class="stat-card warning">
+    <div class="stat-icon warning">👷</div>
+    <div class="stat-meta">
+      <div class="stat-label">Labor Wages (Accrued)</div>
+      <div class="stat-value"><%= current_business.formatted_currency(@monthly_labor_cost) %></div>
+      <div class="stat-subtext">From daily attendances</div>
+    </div>
+  </div>
+
+  <!-- Expenses & Petty Cash -->
+  <div class="stat-card danger">
+    <div class="stat-icon danger">☕</div>
+    <div class="stat-meta">
+      <div class="stat-label">Total Expenses</div>
+      <div class="stat-value"><%= current_business.formatted_currency(@monthly_expenses) %></div>
+      <div class="stat-subtext">Tea/Food: <%= current_business.formatted_currency(@monthly_tea_food_expense) %></div>
+    </div>
+  </div>
+</div>
+
+<!-- Secondary Quick Metric Pills -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+  <div class="card" style="padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">UNCOLLECTED INVOICE DUES</div>
+      <div style="font-size: 1.25rem; font-weight: 700; color: #fbbf24;"><%= current_business.formatted_currency(@total_unpaid_invoices) %></div>
+    </div>
+    <%= link_to "View Invoices →", invoices_path, class: "btn btn-secondary btn-sm" %>
+  </div>
+
+  <div class="card" style="padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">ACTIVE WORKER ADVANCES (KHATA)</div>
+      <div style="font-size: 1.25rem; font-weight: 700; color: #38bdf8;"><%= current_business.formatted_currency(@total_pending_advances) %></div>
+    </div>
+    <%= link_to "View Employees →", employees_path, class: "btn btn-secondary btn-sm" %>
+  </div>
+</div>
+
+<!-- Main Two-Column Layout -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+
+  <!-- Left Column: Today's Attendance Real-Time Status -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span>📝</span> Today's Labor Attendance
+      </div>
+      <%= link_to "Open Full Register →", bulk_attendances_path, class: "btn btn-secondary btn-sm" %>
+    </div>
+
+    <% if @employees.empty? %>
+      <div style="text-align: center; padding: 2.5rem 1rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">👷</div>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">No employees registered yet.</p>
+        <%= link_to "+ Add First Employee", new_employee_path, class: "btn btn-primary btn-sm" %>
+      </div>
+    <% else %>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Wage Type</th>
+              <th>Today Status</th>
+              <th>Wage Today</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @employees.limit(6).each do |emp| %>
+              <% att = @today_attendances[emp.id] %>
+              <tr>
+                <td>
+                  <div style="font-weight: 600; color: #fff;"><%= emp.name %></div>
+                  <div style="font-size: 0.75rem; color: var(--text-dim);"><%= emp.role_title || "Worker" %></div>
+                </td>
+                <td>
+                  <span class="badge badge-neutral"><%= emp.wage_type.capitalize %></span>
+                </td>
+                <td>
+                  <% if att %>
+                    <% case att.status %>
+                    <% when "present" %>
+                      <span class="badge badge-success">✓ Present</span>
+                    <% when "half_day" %>
+                      <span class="badge badge-warning">½ Half Day</span>
+                    <% when "absent" %>
+                      <span class="badge badge-danger">✗ Absent</span>
+                    <% when "paid_leave" %>
+                      <span class="badge badge-info">Paid Leave</span>
+                    <% end %>
+                    <% if att.overtime_hours > 0 %>
+                      <span class="badge badge-warning">+<%= att.overtime_hours %>h OT</span>
+                    <% end %>
+                  <% else %>
+                    <span class="badge badge-neutral">Not Marked</span>
+                  <% end %>
+                </td>
+                <td style="font-weight: 700; color: #fff;">
+                  <%= current_business.formatted_currency(att&.wage_amount || 0) %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Right Column: Active Works & Projects Profitability -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span>🏗️</span> Active Works & Profitability
+      </div>
+      <%= link_to "All Works →", work_projects_path, class: "btn btn-secondary btn-sm" %>
+    </div>
+
+    <% if @active_projects.empty? %>
+      <div style="text-align: center; padding: 2.5rem 1rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🏗️</div>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">No active works or jobs tracked yet.</p>
+        <%= link_to "+ Create First Project", new_work_project_path, class: "btn btn-primary btn-sm" %>
+      </div>
+    <% else %>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Work / Project</th>
+              <th>Quoted / Billed</th>
+              <th>Cost Incurred</th>
+              <th>Profit Margin</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @active_projects.each do |proj| %>
+              <% net_prof = proj.net_profit %>
+              <% margin = proj.profit_margin_pct %>
+              <tr>
+                <td>
+                  <div style="font-weight: 600; color: #fff;"><%= link_to proj.title, work_project_path(proj) %></div>
+                  <div style="font-size: 0.75rem; color: var(--text-dim);"><%= proj.client&.name || "Direct Client" %></div>
+                </td>
+                <td style="font-weight: 600;">
+                  <%= current_business.formatted_currency(proj.total_billed) %>
+                </td>
+                <td style="color: var(--text-muted);">
+                  <%= current_business.formatted_currency(proj.total_cost) %>
+                  <div style="font-size: 0.7rem; color: var(--text-dim);">Labor + Expenses</div>
+                </td>
+                <td>
+                  <span class="badge <%= net_prof >= 0 ? 'badge-success' : 'badge-danger' %>">
+                    <%= net_prof >= 0 ? "+#{margin}%" : "#{margin}%" %>
+                  </span>
+                  <div style="font-size: 0.75rem; font-weight: 600; color: <%= net_prof >= 0 ? 'var(--success-text)' : 'var(--danger-text)' %>;">
+                    <%= current_business.formatted_currency(net_prof) %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- Bottom Section: Recent Invoices & Quotations -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <span>🧾</span> Recent Invoices & Quotations
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+      <%= link_to "+ New Quotation", new_invoice_path(doc_type: "quotation"), class: "btn btn-secondary btn-sm" %>
+      <%= link_to "+ New Invoice", new_invoice_path(doc_type: "invoice"), class: "btn btn-primary btn-sm" %>
+    </div>
+  </div>
+
+  <% if @recent_invoices.empty? %>
+    <div style="text-align: center; padding: 2rem 1rem;">
+      <p style="color: var(--text-muted); margin-bottom: 0.75rem;">No invoices or quotations created yet.</p>
+      <%= link_to "+ Create First Quotation / Invoice", new_invoice_path, class: "btn btn-secondary btn-sm" %>
+    </div>
+  <% else %>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Number</th>
+            <th>Client</th>
+            <th>Date</th>
+            <th>Total Amount</th>
+            <th>Paid / Balance</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @recent_invoices.each do |inv| %>
+            <tr>
+              <td>
+                <span class="badge <%= inv.quotation? ? 'badge-info' : 'badge-neutral' %>">
+                  <%= inv.doc_type.capitalize %>
+                </span>
+              </td>
+              <td style="font-weight: 600; color: #fff;">
+                <%= link_to inv.invoice_number, invoice_path(inv) %>
+              </td>
+              <td><%= inv.client&.display_name || "Direct Client" %></td>
+              <td><%= inv.issue_date.strftime("%d %b %Y") %></td>
+              <td style="font-weight: 700; color: #fff;">
+                <%= current_business.formatted_currency(inv.total_amount) %>
+              </td>
+              <td>
+                <% if inv.invoice? %>
+                  <div style="color: var(--success-text); font-size: 0.8rem;">Paid: <%= current_business.formatted_currency(inv.paid_amount) %></div>
+                  <div style="color: var(--warning-text); font-size: 0.8rem; font-weight: 600;">Due: <%= current_business.formatted_currency(inv.balance_amount) %></div>
+                <% else %>
+                  <span style="color: var(--text-dim);">-</span>
+                <% end %>
+              </td>
+              <td>
+                <% case inv.status %>
+                <% when "paid" %>
+                  <span class="badge badge-success">Paid</span>
+                <% when "partial" %>
+                  <span class="badge badge-warning">Partial</span>
+                <% when "overdue" %>
+                  <span class="badge badge-danger">Overdue</span>
+                <% when "accepted" %>
+                  <span class="badge badge-success">Accepted</span>
+                <% when "sent" %>
+                  <span class="badge badge-info">Sent</span>
+                <% else %>
+                  <span class="badge badge-neutral"><%= inv.status.capitalize %></span>
+                <% end %>
+              </td>
+              <td>
+                <%= link_to "View", invoice_path(inv), class: "btn btn-secondary btn-sm" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>

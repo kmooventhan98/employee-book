@@ -17,203 +17,292 @@
 
   <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
     <%= link_to "☕ + Site Expense", new_expense_path(work_project_id: @project.id), class: "btn btn-secondary btn-sm" %>
-    <%= link_to "🧾 + Invoice for this Work", new_invoice_path(work_project_id: @project.id, doc_type: "invoice"), class: "btn btn-primary btn-sm" %>
-    <%= link_to "Edit Job", edit_work_project_path(@project), class: "btn btn-secondary btn-sm" %>
+    <% if admin? %>
+      <%= link_to "🧾 + Invoice for this Work", new_invoice_path(work_project_id: @project.id, doc_type: "invoice"), class: "btn btn-primary btn-sm" %>
+      <%= link_to "Edit Job", edit_work_project_path(@project), class: "btn btn-secondary btn-sm" %>
+    <% end %>
     <%= link_to "← Works List", work_projects_path, class: "btn btn-secondary btn-sm" %>
   </div>
 </div>
 
-<!-- Work-wise Profit & Loss Cards -->
-<div class="stats-grid" style="margin-bottom: 2rem;">
-  <!-- Net Profit -->
-  <div class="stat-card <%= @net_profit >= 0 ? 'success' : 'danger' %>">
-    <div class="stat-icon <%= @net_profit >= 0 ? 'success' : 'danger' %>">
-      <%= @net_profit >= 0 ? '📈' : '📉' %>
-    </div>
-    <div class="stat-meta">
-      <div class="stat-label">Project Net Profit</div>
-      <div class="stat-value" style="color: <%= @net_profit >= 0 ? 'var(--success-text)' : 'var(--danger-text)' %>;">
-        <%= current_business.formatted_currency(@net_profit) %>
+<% if admin? %>
+  <!-- Work-wise Profit & Loss Cards (Admin Only) -->
+  <div class="stats-grid" style="margin-bottom: 2rem;">
+    <!-- Net Profit -->
+    <div class="stat-card <%= @net_profit >= 0 ? 'success' : 'danger' %>">
+      <div class="stat-icon <%= @net_profit >= 0 ? 'success' : 'danger' %>">
+        <%= @net_profit >= 0 ? '📈' : '📉' %>
       </div>
-      <div class="stat-subtext">Margin: <strong style="color: #fff;"><%= @margin %>%</strong></div>
-    </div>
-  </div>
-
-  <!-- Billed / Contract Revenue -->
-  <div class="stat-card primary">
-    <div class="stat-icon primary">💵</div>
-    <div class="stat-meta">
-      <div class="stat-label">Billed / Quoted Revenue</div>
-      <div class="stat-value"><%= current_business.formatted_currency(@billed_amount) %></div>
-      <div class="stat-subtext">Received: <%= current_business.formatted_currency(@received_amount) %></div>
-    </div>
-  </div>
-
-  <!-- Direct Labor Wages -->
-  <div class="stat-card warning">
-    <div class="stat-icon warning">👷</div>
-    <div class="stat-meta">
-      <div class="stat-label">Direct Labor Cost</div>
-      <div class="stat-value" style="color: var(--warning-text);"><%= current_business.formatted_currency(@labor_cost) %></div>
-      <div class="stat-subtext"><%= @attendances.count %> labor attendance entries</div>
-    </div>
-  </div>
-
-  <!-- Direct Site Expenses -->
-  <div class="stat-card danger">
-    <div class="stat-icon danger">📦</div>
-    <div class="stat-meta">
-      <div class="stat-label">Direct Site Expenses</div>
-      <div class="stat-value" style="color: var(--danger-text);"><%= current_business.formatted_currency(@expenses_cost) %></div>
-      <div class="stat-subtext">Materials, transport, tea & food</div>
-    </div>
-  </div>
-</div>
-
-<!-- Job Costing Visual Breakdown -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-
-  <!-- Labor Breakdown by Worker -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-title">
-        <span>👷</span> Labor Wages Allocated to this Job
+      <div class="stat-meta">
+        <div class="stat-label">Project Net Profit</div>
+        <div class="stat-value" style="color: <%= @net_profit >= 0 ? 'var(--success-text)' : 'var(--danger-text)' %>;">
+          <%= current_business.formatted_currency(@net_profit) %>
+        </div>
+        <div class="stat-subtext">Margin: <strong style="color: #fff;"><%= @margin %>%</strong></div>
       </div>
-      <%= link_to "+ Mark Attendance", bulk_attendances_path, class: "btn btn-secondary btn-sm" %>
     </div>
 
-    <% if @labor_by_employee.empty? %>
-      <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
-        No labor attendances tagged to this work yet.
+    <!-- Billed / Contract Revenue -->
+    <div class="stat-card primary">
+      <div class="stat-icon primary">💵</div>
+      <div class="stat-meta">
+        <div class="stat-label">Billed / Quoted Revenue</div>
+        <div class="stat-value"><%= current_business.formatted_currency(@billed_amount) %></div>
+        <div class="stat-subtext">Received: <%= current_business.formatted_currency(@received_amount) %></div>
       </div>
-    <% else %>
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Laborer</th>
-              <th>Days Worked</th>
-              <th>Overtime</th>
-              <th>Total Wage Cost</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @labor_by_employee.each do |emp, data| %>
+    </div>
+
+    <!-- Direct Labor Wages -->
+    <div class="stat-card warning">
+      <div class="stat-icon warning">👷</div>
+      <div class="stat-meta">
+        <div class="stat-label">Direct Labor Cost</div>
+        <div class="stat-value" style="color: var(--warning-text);"><%= current_business.formatted_currency(@labor_cost) %></div>
+        <div class="stat-subtext"><%= @attendances.count %> labor attendance entries</div>
+      </div>
+    </div>
+
+    <!-- Direct Site Expenses -->
+    <div class="stat-card danger">
+      <div class="stat-icon danger">📦</div>
+      <div class="stat-meta">
+        <div class="stat-label">Direct Site Expenses</div>
+        <div class="stat-value" style="color: var(--danger-text);"><%= current_business.formatted_currency(@expenses_cost) %></div>
+        <div class="stat-subtext">Materials, transport, tea & food</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Job Costing Visual Breakdown -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+
+    <!-- Labor Breakdown by Worker -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>👷</span> Labor Wages Allocated to this Job
+        </div>
+        <%= link_to "+ Mark Attendance", bulk_attendances_path, class: "btn btn-secondary btn-sm" %>
+      </div>
+
+      <% if @labor_by_employee.empty? %>
+        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+          No labor attendances tagged to this work yet.
+        </div>
+      <% else %>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
               <tr>
-                <td style="font-weight: 600; color: #fff;">
-                  <%= link_to emp.name, employee_path(emp) %>
-                  <div style="font-size: 0.75rem; color: var(--text-dim);"><%= emp.role_title %></div>
-                </td>
-                <td><%= data[:days] %> days</td>
-                <td><%= data[:ot] > 0 ? "#{data[:ot]} hrs" : "-" %></td>
-                <td style="font-weight: 700; color: #fbbf24;">
-                  <%= current_business.formatted_currency(data[:cost]) %>
-                </td>
+                <th>Laborer</th>
+                <th>Days Worked</th>
+                <th>Overtime</th>
+                <th>Total Wage Cost</th>
               </tr>
-            <% end %>
-          </tbody>
-          <tfoot>
-            <tr style="font-weight: 700; border-top: 2px solid var(--border-subtle);">
-              <td colspan="3" style="color: #fff;">Total Labor Cost</td>
-              <td style="color: var(--warning-text); font-size: 1rem;"><%= current_business.formatted_currency(@labor_cost) %></td>
-            </tr>
-          </tfoot>
-        </table>
+            </thead>
+            <tbody>
+              <% @labor_by_employee.each do |emp, data| %>
+                <tr>
+                  <td style="font-weight: 600; color: #fff;">
+                    <%= link_to emp.name, employee_path(emp) %>
+                    <div style="font-size: 0.75rem; color: var(--text-dim);"><%= emp.role_title %></div>
+                  </td>
+                  <td><%= data[:days] %> days</td>
+                  <td><%= data[:ot] > 0 ? "#{data[:ot]} hrs" : "-" %></td>
+                  <td style="font-weight: 700; color: #fbbf24;">
+                    <%= current_business.formatted_currency(data[:cost]) %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+            <tfoot>
+              <tr style="font-weight: 700; border-top: 2px solid var(--border-subtle);">
+                <td colspan="3" style="color: #fff;">Total Labor Cost</td>
+                <td style="color: var(--warning-text); font-size: 1rem;"><%= current_business.formatted_currency(@labor_cost) %></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Site Expenses by Category -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>📦</span> Expenses Incurred on this Job
+        </div>
+        <%= link_to "+ Log Site Expense", new_expense_path(work_project_id: @project.id), class: "btn btn-secondary btn-sm" %>
       </div>
-    <% end %>
+
+      <% if @expenses_by_category.empty? %>
+        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+          No expenses tagged directly to this project yet.
+        </div>
+      <% else %>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Expense Category</th>
+                <th>Total Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @expenses_by_category.each do |cat, amt| %>
+                <tr>
+                  <td>
+                    <span class="badge" style="background: <%= cat&.color || '#6366f1' %>22; color: #fff;">
+                      <%= cat&.icon %> <%= cat&.name || "General" %>
+                    </span>
+                  </td>
+                  <td style="font-weight: 700; color: var(--danger-text);">
+                    <%= current_business.formatted_currency(amt) %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+            <tfoot>
+              <tr style="font-weight: 700; border-top: 2px solid var(--border-subtle);">
+                <td style="color: #fff;">Total Direct Expenses</td>
+                <td style="color: var(--danger-text); font-size: 1rem;"><%= current_business.formatted_currency(@expenses_cost) %></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      <% end %>
+    </div>
   </div>
 
-  <!-- Site Expenses by Category -->
+  <!-- Invoices Issued for this Work -->
   <div class="card">
     <div class="card-header">
       <div class="card-title">
-        <span>📦</span> Expenses Incurred on this Job
+        <span>🧾</span> Client Invoices & Quotations for this Project
       </div>
-      <%= link_to "+ Log Site Expense", new_expense_path(work_project_id: @project.id), class: "btn btn-secondary btn-sm" %>
+      <%= link_to "+ Issue Invoice", new_invoice_path(work_project_id: @project.id, doc_type: "invoice"), class: "btn btn-primary btn-sm" %>
     </div>
 
-    <% if @expenses_by_category.empty? %>
+    <% if @invoices.empty? %>
       <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
-        No expenses tagged directly to this project yet.
+        No invoices or quotations linked to this job yet.
       </div>
     <% else %>
       <div class="table-responsive">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Expense Category</th>
+              <th>Type</th>
+              <th>Invoice #</th>
+              <th>Date</th>
               <th>Total Amount</th>
+              <th>Paid Amount</th>
+              <th>Balance Due</th>
+              <th>Status</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            <% @expenses_by_category.each do |cat, amt| %>
+            <% @invoices.each do |inv| %>
               <tr>
-                <td>
-                  <span class="badge" style="background: <%= cat&.color || '#6366f1' %>22; color: #fff;">
-                    <%= cat&.icon %> <%= cat&.name || "General" %>
-                  </span>
-                </td>
-                <td style="font-weight: 700; color: var(--danger-text);">
-                  <%= current_business.formatted_currency(amt) %>
-                </td>
+                <td><span class="badge <%= inv.quotation? ? 'badge-info' : 'badge-neutral' %>"><%= inv.doc_type.capitalize %></span></td>
+                <td style="font-weight: 700; color: #fff;"><%= link_to inv.invoice_number, invoice_path(inv) %></td>
+                <td><%= inv.issue_date.strftime("%d %b %Y") %></td>
+                <td style="font-weight: 700;"><%= current_business.formatted_currency(inv.total_amount) %></td>
+                <td style="color: var(--success-text);"><%= current_business.formatted_currency(inv.paid_amount) %></td>
+                <td style="color: var(--warning-text); font-weight: 600;"><%= current_business.formatted_currency(inv.balance_amount) %></td>
+                <td><span class="badge badge-success"><%= inv.status.capitalize %></span></td>
+                <td><%= link_to "View", invoice_path(inv), class: "btn btn-secondary btn-sm" %></td>
               </tr>
             <% end %>
           </tbody>
-          <tfoot>
-            <tr style="font-weight: 700; border-top: 2px solid var(--border-subtle);">
-              <td style="color: #fff;">Total Direct Expenses</td>
-              <td style="color: var(--danger-text); font-size: 1rem;"><%= current_business.formatted_currency(@expenses_cost) %></td>
-            </tr>
-          </tfoot>
         </table>
       </div>
     <% end %>
   </div>
-</div>
 
-<!-- Invoices Issued for this Work -->
-<div class="card">
-  <div class="card-header">
-    <div class="card-title">
-      <span>🧾</span> Client Invoices & Quotations for this Project
-    </div>
-    <%= link_to "+ Issue Invoice", new_invoice_path(work_project_id: @project.id, doc_type: "invoice"), class: "btn btn-primary btn-sm" %>
-  </div>
-
-  <% if @invoices.empty? %>
-    <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
-      No invoices or quotations linked to this job yet.
-    </div>
-  <% else %>
-    <div class="table-responsive">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>Invoice #</th>
-            <th>Date</th>
-            <th>Total Amount</th>
-            <th>Paid Amount</th>
-            <th>Balance Due</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @invoices.each do |inv| %>
-            <tr>
-              <td><span class="badge <%= inv.quotation? ? 'badge-info' : 'badge-neutral' %>"><%= inv.doc_type.capitalize %></span></td>
-              <td style="font-weight: 700; color: #fff;"><%= link_to inv.invoice_number, invoice_path(inv) %></td>
-              <td><%= inv.issue_date.strftime("%d %b %Y") %></td>
-              <td style="font-weight: 700;"><%= current_business.formatted_currency(inv.total_amount) %></td>
-              <td style="color: var(--success-text);"><%= current_business.formatted_currency(inv.paid_amount) %></td>
-              <td style="color: var(--warning-text); font-weight: 600;"><%= current_business.formatted_currency(inv.balance_amount) %></td>
-              <td><span class="badge badge-success"><%= inv.status.capitalize %></span></td>
-              <td><%= link_to "View", invoice_path(inv), class: "btn btn-secondary btn-sm" %></td>
-            </tr>
+<% else %>
+  <!-- ===================================== -->
+  <!-- EMPLOYEE / NORMAL USER VIEW OF WORK   -->
+  <!-- ===================================== -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <!-- Site Details Card -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>🏗️</span> Job Site Details
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.9rem;">
+        <div>
+          <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">WORK TITLE</span>
+          <strong style="color: #fff; font-size: 1.1rem;"><%= @project.title %></strong>
+        </div>
+        <div>
+          <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">CLIENT / LOCATION</span>
+          <div style="color: #fff; font-weight: 600;"><%= @project.client&.display_name || "Direct Client" %></div>
+          <% if @project.client&.address.present? %>
+            <div style="color: var(--text-dim); font-size: 0.8rem;"><%= @project.client.address %></div>
           <% end %>
-        </tbody>
-      </table>
+        </div>
+        <% if @project.description.present? %>
+          <div>
+            <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">SITE INSTRUCTIONS / DESCRIPTION</span>
+            <p style="color: var(--text-main); margin-top: 0.25rem;"><%= @project.description %></p>
+          </div>
+        <% end %>
+        <div style="display: flex; gap: 1rem;">
+          <div>
+            <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">START DATE</span>
+            <span style="color: #fff;"><%= @project.start_date&.strftime("%d %b %Y") || "Ongoing" %></span>
+          </div>
+          <div>
+            <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">TARGET COMPLETION</span>
+            <span style="color: #fff;"><%= @project.end_date&.strftime("%d %b %Y") || "Ongoing" %></span>
+          </div>
+        </div>
+      </div>
     </div>
-  <% end %>
-</div>
+
+    <!-- Quick Tea & Site Petty Cash for Workers -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>☕</span> Site Expenses & Petty Cash
+        </div>
+        <%= link_to "+ Add Expense", new_expense_path(work_project_id: @project.id), class: "btn btn-primary btn-sm" %>
+      </div>
+
+      <% if @expenses.empty? %>
+        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+          No expenses logged for this site yet.
+        </div>
+      <% else %>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Paid To</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @expenses.limit(8).each do |exp| %>
+                <tr>
+                  <td><%= exp.date.strftime("%d %b") %></td>
+                  <td>
+                    <span class="badge badge-neutral"><%= exp.expense_category&.name %></span>
+                  </td>
+                  <td style="font-weight: 700; color: #fff;"><%= current_business.formatted_currency(exp.amount) %></td>
+                  <td style="color: var(--text-dim);"><%= exp.paid_to %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

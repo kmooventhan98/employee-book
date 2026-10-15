@@ -1,4 +1,5 @@
 class WorkProjectsController < ApplicationController
+  before_action :require_admin, except: %i[ index show ]
   before_action :set_project, only: %i[ show edit update destroy cost_analysis ]
 
   def index
@@ -48,13 +49,7 @@ class WorkProjectsController < ApplicationController
     @clients = current_business.clients.order(:name)
     @project = current_business.work_projects.build(project_params)
 
-    if params[:new_client_name].present?
-      new_client = current_business.clients.find_or_create_by!(name: params[:new_client_name].strip) do |c|
-        c.phone = params[:new_client_phone].presence
-        c.company_name = params[:new_client_company].presence
-      end
-      @project.client = new_client
-    end
+    resolve_client_from_params
 
     if @project.save
       redirect_to work_project_path(@project), notice: "Work / Project '#{@project.title}' created successfully!"
@@ -70,13 +65,7 @@ class WorkProjectsController < ApplicationController
   def update
     @clients = current_business.clients.order(:name)
 
-    if params[:new_client_name].present?
-      new_client = current_business.clients.find_or_create_by!(name: params[:new_client_name].strip) do |c|
-        c.phone = params[:new_client_phone].presence
-        c.company_name = params[:new_client_company].presence
-      end
-      @project.client = new_client
-    end
+    resolve_client_from_params
 
     if @project.update(project_params)
       redirect_to work_project_path(@project), notice: "Project details updated."
@@ -96,6 +85,25 @@ class WorkProjectsController < ApplicationController
   end
 
   private
+
+  def resolve_client_from_params
+    query = (params[:new_client_name].presence || params[:client_search_query].presence)&.strip
+    return if query.blank?
+
+    if params[:work_project][:client_id].blank?
+      # Case-insensitive match for existing client
+      matched_client = current_business.clients.find_by("LOWER(name) = ?", query.downcase)
+      if matched_client
+        @project.client = matched_client
+      else
+        @project.client = current_business.clients.create!(
+          name: query,
+          phone: params[:new_client_phone].presence,
+          company_name: params[:new_client_company].presence
+        )
+      end
+    end
+  end
 
   def set_project
     @project = current_business.work_projects.find(params[:id])

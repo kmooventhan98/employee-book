@@ -19,10 +19,46 @@
   </div>
 
   <div style="margin-top: 1.5rem;">
-    <%= f.submit "Sign In to Business", class: "btn btn-primary btn-lg", style: "width: 100%;" %>
+    <%= f.submit "Sign In to Business", id: "submit-sign-in-btn", class: "btn btn-primary btn-lg", style: "width: 100%;" %>
   </div>
 <% end %>
 
-<div style="margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid var(--border-subtle); text-align: center; font-size: 0.85rem; color: var(--text-muted);">
+<!-- 1-Tap Quick Demo Role Switcher (Mobile & Desktop Friendly) -->
+<div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255, 255, 255, 0.03); border: 1px dashed var(--border-subtle); border-radius: var(--radius-md);">
+  <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 700; margin-bottom: 0.75rem; text-align: center;">
+    ⚡ 1-Tap Quick Demo Login
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+    <button type="button" onclick="quickFill('superadmin@karigarbook.com', 'password123')" class="btn btn-secondary btn-sm" style="display: flex; justify-content: space-between; align-items: center; text-align: left; padding: 0.55rem 0.85rem;">
+      <span>👑 <strong>Super Admin</strong> (Platform Console)</span>
+      <span style="font-size: 0.7rem; color: #fbbf24;">Onboard Businesses →</span>
+    </button>
+
+    <button type="button" onclick="quickFill('ramesh@apexengg.com', 'password123')" class="btn btn-secondary btn-sm" style="display: flex; justify-content: space-between; align-items: center; text-align: left; padding: 0.55rem 0.85rem;">
+      <span>🏢 <strong>Business Owner</strong> (Admin)</span>
+      <span style="font-size: 0.7rem; color: #34d399;">Full P&L & Billing →</span>
+    </button>
+
+    <button type="button" onclick="quickFill('muthu@apexengg.com', 'password123')" class="btn btn-secondary btn-sm" style="display: flex; justify-content: space-between; align-items: center; text-align: left; padding: 0.55rem 0.85rem;">
+      <span>👷 <strong>Employee</strong> (Normal User)</span>
+      <span style="font-size: 0.7rem; color: #38bdf8;">Work & Wages →</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  function quickFill(email, pwd) {
+    const emailField = document.querySelector('input[type="email"]');
+    const pwdField = document.querySelector('input[type="password"]');
+    if (emailField && pwdField) {
+      emailField.value = email;
+      pwdField.value = pwd;
+      document.getElementById('submit-sign-in-btn').click();
+    }
+  }
+</script>
+
+<div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-subtle); text-align: center; font-size: 0.85rem; color: var(--text-muted);">
   New business owner? <%= link_to "Create your Business Account", new_registration_path, style: "color: #818cf8; font-weight: 600;" %>
 </div>

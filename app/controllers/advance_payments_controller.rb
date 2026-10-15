@@ -1,4 +1,5 @@
 class AdvancePaymentsController < ApplicationController
+  before_action :require_admin
   before_action :set_employee
 
   def new

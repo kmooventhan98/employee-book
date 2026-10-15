@@ -1,0 +1,24 @@
+Welcome to KarigarBook, <%= @owner.full_name %>!
+======================================================
+
+Your business "<%= @business.name %>" has been onboarded onto KarigarBook.
+
+YOUR LOGIN CREDENTIALS:
+- Workspace: <%= @business.name %>
+- Email: <%= @owner.email_address %>
+<% if @temporary_password.present? %>
+- Password: <%= @temporary_password %>
+<% end %>
+- Currency: <%= @business.currency_code %> (<%= @business.currency_symbol %>)
+
+Sign In URL: <%= @login_url %>
+
+GETTING STARTED:
+1. Mark daily attendance with 1-touch Present / Half Day / Absent tiles.
+2. Log tea, food, and fuel expenses on the go.
+3. Track labor wages and worker khata advances.
+4. Issue quotations and tax invoices.
+5. Review work-wise and monthly Profit & Loss.
+
+Thank you,
+KarigarBook Team

@@ -1,4 +1,5 @@
 class BusinessSettingsController < ApplicationController
+  before_action :require_admin
   def show
     @business = current_business
     @categories = @business.expense_categories

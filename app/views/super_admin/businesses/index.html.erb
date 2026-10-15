@@ -1,0 +1,57 @@
+<% content_for :page_title do %>
+  <span>All Businesses — Super Admin</span>
+<% end %>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff;">🏢 All Onboarded Businesses</h2>
+    <p style="color: var(--text-muted); font-size: 0.85rem;">Platform Directory of all small businesses registered on KarigarBook</p>
+  </div>
+  <div style="display: flex; gap: 0.5rem;">
+    <%= link_to "+ Onboard New Business", new_super_admin_business_path, class: "btn btn-primary" %>
+    <%= link_to "← Super Admin Hub", super_admin_root_path, class: "btn btn-secondary" %>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Business</th>
+          <th>Owner Name & Email</th>
+          <th>Phone</th>
+          <th>Currency</th>
+          <th>Labor Force</th>
+          <th>Total Works</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @businesses.each do |b| %>
+          <% owner = b.users.find_by(role: ["admin", "owner"]) || b.users.first %>
+          <tr>
+            <td>
+              <div style="font-weight: 700; color: #fff;"><%= link_to b.name, super_admin_business_path(b) %></div>
+              <div style="font-size: 0.75rem; color: var(--text-dim);"><%= b.tax_id.presence || "No Tax ID" %></div>
+            </td>
+            <td>
+              <div style="font-weight: 600;"><%= owner&.full_name || "No Owner" %></div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);"><%= owner&.email_address %></div>
+            </td>
+            <td><%= b.phone %></td>
+            <td><span class="badge badge-neutral"><%= b.currency_code %> (<%= b.currency_symbol %>)</span></td>
+            <td><span class="badge badge-info"><%= b.employees.count %> Workers</span></td>
+            <td><%= b.work_projects.count %> Projects</td>
+            <td>
+              <div style="display: flex; gap: 0.35rem;">
+                <%= button_to "⚡ Switch In", switch_to_super_admin_business_path(b), method: :post, class: "btn btn-primary btn-sm" %>
+                <%= link_to "Details", super_admin_business_path(b), class: "btn btn-secondary btn-sm" %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,4 +1,5 @@
 class InvoicesController < ApplicationController
+  before_action :require_admin
   before_action :set_invoice, only: %i[ show edit update destroy convert_to_invoice print ]
 
   def index

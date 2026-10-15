@@ -4,54 +4,62 @@
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
   <div>
-    <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff;">Works, Jobs & Project Costing</h2>
+    <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff;"><%= employee? ? "Active Works & Site Locations" : "Works, Jobs & Project Costing" %></h2>
     <p style="color: var(--text-muted); font-size: 0.85rem;">
-      Track work-wise revenue vs direct labor wages vs direct expenses to see real-time project profitability
+      <%= employee? ? "View active job sites and log tea/food expenses" : "Track work-wise revenue vs direct labor wages vs direct expenses to see real-time project profitability" %>
     </p>
   </div>
-  <div style="display: flex; gap: 0.5rem;">
-    <%= link_to "🎯 Work-wise P&L Report", work_pnl_report_path, class: "btn btn-secondary" %>
-    <%= link_to "+ New Work / Project", new_work_project_path, class: "btn btn-primary" %>
-  </div>
+  <% if admin? %>
+    <div style="display: flex; gap: 0.5rem;">
+      <%= link_to "🎯 Work-wise P&L Report", work_pnl_report_path, class: "btn btn-secondary" %>
+      <%= link_to "+ New Work / Project", new_work_project_path, class: "btn btn-primary" %>
+    </div>
+  <% end %>
 </div>
 
-<!-- Project Overview Stat Cards -->
-<div class="stats-grid" style="margin-bottom: 1.5rem;">
-  <div class="stat-card primary">
-    <div class="stat-icon primary">🏗️</div>
-    <div class="stat-meta">
-      <div class="stat-label">Active Works</div>
-      <div class="stat-value"><%= @active_count %></div>
-      <div class="stat-subtext"><%= @completed_count %> Completed projects</div>
+<% if admin? %>
+  <!-- Project Overview Stat Cards for Admin -->
+  <div class="stats-grid" style="margin-bottom: 1.5rem;">
+    <div class="stat-card primary">
+      <div class="stat-icon primary">🏗️</div>
+      <div class="stat-meta">
+        <div class="stat-label">Active Works</div>
+        <div class="stat-value"><%= @active_count %></div>
+        <div class="stat-subtext"><%= @completed_count %> Completed projects</div>
+      </div>
     </div>
-  </div>
 
-  <div class="stat-card warning">
-    <div class="stat-icon warning">👷</div>
-    <div class="stat-meta">
-      <div class="stat-label">Total Direct Labor Allocated</div>
-      <div class="stat-value"><%= current_business.formatted_currency(@total_labor_all) %></div>
-      <div class="stat-subtext">Wages tagged to specific works</div>
+    <div class="stat-card warning">
+      <div class="stat-icon warning">👷</div>
+      <div class="stat-meta">
+        <div class="stat-label">Total Direct Labor Allocated</div>
+        <div class="stat-value"><%= current_business.formatted_currency(@total_labor_all) %></div>
+        <div class="stat-subtext">Wages tagged to specific works</div>
+      </div>
     </div>
-  </div>
 
-  <div class="stat-card danger">
-    <div class="stat-icon danger">📦</div>
-    <div class="stat-meta">
-      <div class="stat-label">Total Direct Project Expenses</div>
-      <div class="stat-value"><%= current_business.formatted_currency(@total_expenses_all) %></div>
-      <div class="stat-subtext">Materials, transport & tea for sites</div>
+    <div class="stat-card danger">
+      <div class="stat-icon danger">📦</div>
+      <div class="stat-meta">
+        <div class="stat-label">Total Direct Project Expenses</div>
+        <div class="stat-value"><%= current_business.formatted_currency(@total_expenses_all) %></div>
+        <div class="stat-subtext">Materials, transport & tea for sites</div>
+      </div>
     </div>
   </div>
-</div>
+<% end %>
 
 <div class="card">
   <% if @projects.empty? %>
     <div style="text-align: center; padding: 3rem 1rem;">
       <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🏗️</div>
       <h3 style="color: #fff; margin-bottom: 0.5rem;">No works or projects created yet</h3>
-      <p style="color: var(--text-muted); margin-bottom: 1.25rem;">Start tracking your first site, contract, or fabrication job to see work-wise profit and loss.</p>
-      <%= link_to "+ Create First Project", new_work_project_path, class: "btn btn-primary" %>
+      <% if admin? %>
+        <p style="color: var(--text-muted); margin-bottom: 1.25rem;">Start tracking your first site, contract, or fabrication job to see work-wise profit and loss.</p>
+        <%= link_to "+ Create First Project", new_work_project_path, class: "btn btn-primary" %>
+      <% else %>
+        <p style="color: var(--text-muted);">Your manager has not assigned any active work sites yet.</p>
+      <% end %>
     </div>
   <% else %>
     <div class="table-responsive">
@@ -61,10 +69,12 @@
             <th>Work / Project</th>
             <th>Client</th>
             <th>Status</th>
-            <th>Quoted / Billed</th>
-            <th>Labor Cost</th>
-            <th>Expenses</th>
-            <th>Net Profit / Margin</th>
+            <% if admin? %>
+              <th>Quoted / Billed</th>
+              <th>Labor Cost</th>
+              <th>Expenses</th>
+              <th>Net Profit / Margin</th>
+            <% end %>
             <th>Actions</th>
           </tr>
         </thead>
@@ -96,27 +106,31 @@
                   <span class="badge badge-danger"><%= p.status.capitalize %></span>
                 <% end %>
               </td>
-              <td style="font-weight: 700; color: #fff;">
-                <%= current_business.formatted_currency(p.total_billed) %>
-              </td>
-              <td style="color: #fbbf24;">
-                <%= current_business.formatted_currency(p.total_labor_cost) %>
-              </td>
-              <td style="color: var(--danger-text);">
-                <%= current_business.formatted_currency(p.total_expenses_cost) %>
-              </td>
-              <td>
-                <span class="badge <%= net_p >= 0 ? 'badge-success' : 'badge-danger' %>">
-                  <%= net_p >= 0 ? "+#{margin}%" : "#{margin}%" %>
-                </span>
-                <div style="font-weight: 700; font-size: 0.88rem; color: <%= net_p >= 0 ? 'var(--success-text)' : 'var(--danger-text)' %>;">
-                  <%= current_business.formatted_currency(net_p) %>
-                </div>
-              </td>
+              <% if admin? %>
+                <td style="font-weight: 700; color: #fff;">
+                  <%= current_business.formatted_currency(p.total_billed) %>
+                </td>
+                <td style="color: #fbbf24;">
+                  <%= current_business.formatted_currency(p.total_labor_cost) %>
+                </td>
+                <td style="color: var(--danger-text);">
+                  <%= current_business.formatted_currency(p.total_expenses_cost) %>
+                </td>
+                <td>
+                  <span class="badge <%= net_p >= 0 ? 'badge-success' : 'badge-danger' %>">
+                    <%= net_p >= 0 ? "+#{margin}%" : "#{margin}%" %>
+                  </span>
+                  <div style="font-weight: 700; font-size: 0.88rem; color: <%= net_p >= 0 ? 'var(--success-text)' : 'var(--danger-text)' %>;">
+                    <%= current_business.formatted_currency(net_p) %>
+                  </div>
+                </td>
+              <% end %>
               <td>
                 <div style="display: flex; gap: 0.35rem;">
-                  <%= link_to "P&L Analysis", work_project_path(p), class: "btn btn-secondary btn-sm" %>
-                  <%= link_to "Edit", edit_work_project_path(p), class: "btn btn-secondary btn-sm" %>
+                  <%= link_to (admin? ? "P&L Analysis" : "View Details"), work_project_path(p), class: "btn btn-secondary btn-sm" %>
+                  <% if admin? %>
+                    <%= link_to "Edit", edit_work_project_path(p), class: "btn btn-secondary btn-sm" %>
+                  <% end %>
                 </div>
               </td>
             </tr>

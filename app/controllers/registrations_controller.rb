@@ -12,6 +12,7 @@ class RegistrationsController < ApplicationController
       if @business.save
         @user = @business.users.build(user_params.merge(role: "owner"))
         if @user.save
+          BusinessMailer.welcome_email(@business, @user).deliver_later
           start_new_session_for @user
           redirect_to root_path, notice: "Welcome to your business OS, #{@user.full_name}!"
         else

@@ -21,6 +21,20 @@ class Business < ApplicationRecord
     "#{currency_symbol || '₹'}#{'%.2f' % (amount || 0)}"
   end
 
+  def logo_initials
+    clean = name.to_s.strip
+    return "KB" if clean.blank?
+
+    words = clean.split(/\s+/)
+    if words.size >= 2
+      "#{words[0][0]}#{words[1][0]}".upcase
+    elsif words[0].length >= 2
+      words[0][0..1].upcase
+    else
+      words[0][0].upcase
+    end
+  end
+
   private
 
   def create_default_expense_categories

@@ -1,0 +1,171 @@
+<% content_for :page_title do %>
+  <span>Attendance Calendar — <%= @month_date.strftime("%B %Y") %></span>
+<% end %>
+
+<!-- Top Header with Month Navigation & View Switcher -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+      <span>📅 Attendance Calendar</span>
+      <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+        <%= employee? ? "My Monthly Attendance" : "#{current_business.name}" %>
+      </span>
+    </h2>
+    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem;">
+      Click on any date to open the 1-Touch Tile Register and update attendance
+    </p>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+    <!-- View Switcher -->
+    <div class="att-view-tabs">
+      <%= link_to bulk_attendances_path, class: "att-view-tab" do %>
+        <span>📱</span> 1-Touch Tiles
+      <% end %>
+      <%= link_to calendar_attendances_path(month: @month_date), class: "att-view-tab active" do %>
+        <span>📅</span> Calendar View
+      <% end %>
+    </div>
+
+    <!-- Month Navigator -->
+    <div style="display: inline-flex; align-items: center; gap: 0.35rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 4px;">
+      <%= link_to "←", calendar_attendances_path(month: @prev_month), class: "btn btn-secondary btn-sm", title: "Previous Month" %>
+      <span style="font-weight: 700; color: #fff; padding: 0 0.5rem; font-size: 0.9rem; min-width: 120px; text-align: center;">
+        <%= @month_date.strftime("%B %Y") %>
+      </span>
+      <%= link_to "→", calendar_attendances_path(month: @next_month), class: "btn btn-secondary btn-sm", title: "Next Month" %>
+      <%= link_to "This Month", calendar_attendances_path(month: Date.current.beginning_of_month), class: "btn btn-primary btn-sm" %>
+    </div>
+  </div>
+</div>
+
+<!-- Monthly Summary Stat Cards -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-bottom: 1.5rem;">
+  <div class="stat-card success" style="padding: 1rem 1.25rem;">
+    <div class="stat-meta">
+      <div class="stat-label">Days Present</div>
+      <div class="stat-value" style="color: var(--success-text);"><%= @monthly_present_days %></div>
+      <div class="stat-subtext">Full shift workdays</div>
+    </div>
+  </div>
+
+  <div class="stat-card warning" style="padding: 1rem 1.25rem;">
+    <div class="stat-meta">
+      <div class="stat-label">Half Days</div>
+      <div class="stat-value" style="color: var(--warning-text);"><%= @monthly_half_days %></div>
+      <div class="stat-subtext">50% day wages</div>
+    </div>
+  </div>
+
+  <div class="stat-card info" style="padding: 1rem 1.25rem;">
+    <div class="stat-meta">
+      <div class="stat-label">Overtime Hours</div>
+      <div class="stat-value" style="color: var(--info-text);"><%= @monthly_ot_hours %> hrs</div>
+      <div class="stat-subtext">Beyond normal shifts</div>
+    </div>
+  </div>
+
+  <% if admin? %>
+    <div class="stat-card primary" style="padding: 1rem 1.25rem;">
+      <div class="stat-meta">
+        <div class="stat-label">Month's Labor Accrual</div>
+        <div class="stat-value"><%= current_business.formatted_currency(@monthly_total_wages) %></div>
+        <div class="stat-subtext">Cumulative wage liabilities</div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<!-- Calendar Grid Table -->
+<div class="card" style="padding: 1rem; overflow-x: auto;">
+  <table class="calendar-table">
+    <thead>
+      <tr>
+        <th class="calendar-weekday-header">Mon</th>
+        <th class="calendar-weekday-header">Tue</th>
+        <th class="calendar-weekday-header">Wed</th>
+        <th class="calendar-weekday-header">Thu</th>
+        <th class="calendar-weekday-header">Fri</th>
+        <th class="calendar-weekday-header">Sat</th>
+        <th class="calendar-weekday-header" style="color: #f87171;">Sun</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% (@start_calendar..@end_calendar).to_a.in_groups_of(7, false) do |week| %>
+        <tr>
+          <% week.each do |day| %>
+            <% next unless day %>
+            <% is_curr_month = day.month == @month_date.month %>
+            <% is_today = day == Date.current %>
+            <% is_sunday = day.sunday? %>
+            <% day_atts = @attendances_by_date[day] || [] %>
+            <% p_count = day_atts.count { |a| a.status == "present" } %>
+            <% h_count = day_atts.count { |a| a.status == "half_day" } %>
+            <% a_count = day_atts.count { |a| a.status == "absent" } %>
+            <% l_count = day_atts.count { |a| a.status == "paid_leave" } %>
+            <% day_wages = day_atts.sum(&:wage_amount) %>
+
+            <td class="calendar-day-cell <%= 'other-month' unless is_curr_month %> <%= 'is-today' if is_today %> <%= 'is-sunday' if is_sunday %>"
+                onclick="window.location.href='<%= bulk_attendances_path(date: day) %>'">
+              <div class="calendar-day-num">
+                <span><%= day.day %></span>
+                <% if is_sunday %>
+                  <span style="font-size: 0.65rem; color: #f87171; font-weight: 600;">OFF</span>
+                <% elsif is_today %>
+                  <span style="font-size: 0.65rem; color: #818cf8; font-weight: 700;">TODAY</span>
+                <% end %>
+              </div>
+
+              <% if day_atts.any? %>
+                <div class="day-badge-stack">
+                  <% if p_count > 0 %>
+                    <span class="cal-pill present">
+                      <span>✓</span> <%= p_count %> Present
+                    </span>
+                  <% end %>
+                  <% if h_count > 0 %>
+                    <span class="cal-pill half">
+                      <span>½</span> <%= h_count %> Half
+                    </span>
+                  <% end %>
+                  <% if a_count > 0 && admin? %>
+                    <span class="cal-pill absent">
+                      <span>✗</span> <%= a_count %> Absent
+                    </span>
+                  <% end %>
+                  <% if l_count > 0 %>
+                    <span class="cal-pill" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa;">
+                      <span>🏖️</span> <%= l_count %> Leave
+                    </span>
+                  <% end %>
+                </div>
+
+                <% if admin? && day_wages > 0 %>
+                  <div class="cal-wage-summary">
+                    <%= current_business.formatted_currency(day_wages) %>
+                  </div>
+                <% end %>
+              <% elsif is_curr_month && day <= Date.current && !is_sunday %>
+                <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 4px;">
+                  Tap to mark
+                </div>
+              <% end %>
+            </td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">
+    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+      <span><strong style="color: var(--success-text);">✓ Present:</strong> Full day wage</span>
+      <span><strong style="color: var(--warning-text);">½ Half Day:</strong> 50% wage</span>
+      <span><strong style="color: var(--danger-text);">✗ Absent:</strong> Unpaid</span>
+      <span><strong style="color: #60a5fa;">🏖️ Paid Leave:</strong> 100% wage</span>
+    </div>
+    <div>
+      <%= link_to "📱 Open Today's 1-Touch Register →", bulk_attendances_path(date: Date.current), class: "btn btn-primary btn-sm" %>
+    </div>
+  </div>
+</div>

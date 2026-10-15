@@ -1,4 +1,5 @@
 class PaymentReceiptsController < ApplicationController
+  before_action :require_admin
   before_action :set_invoice
 
   def create

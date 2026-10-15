@@ -1,0 +1,115 @@
+<% content_for :page_title do %>
+  <span>👑 Super Admin Console</span>
+<% end %>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff;">Platform Super Admin Console</h2>
+    <p style="color: var(--text-muted); font-size: 0.85rem;">
+      Full platform management: Onboard new businesses, manage owners, and monitor SaaS metrics
+    </p>
+  </div>
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <%= link_to "+ Onboard New Business", new_super_admin_business_path, class: "btn btn-primary" %>
+    <%= link_to "🏢 All Businesses", super_admin_businesses_path, class: "btn btn-secondary" %>
+    <% if Rails.env.development? %>
+      <%= link_to "📬 Dev Mailbox", "/letter_opener", target: "_blank", class: "btn btn-secondary" %>
+    <% end %>
+    <%= link_to "← Business App", root_path, class: "btn btn-secondary" %>
+  </div>
+</div>
+
+<!-- Platform Stats Grid -->
+<div class="stats-grid">
+  <div class="stat-card primary">
+    <div class="stat-icon primary">🏢</div>
+    <div class="stat-meta">
+      <div class="stat-label">Total Onboarded Businesses</div>
+      <div class="stat-value"><%= @total_businesses %></div>
+      <div class="stat-subtext"><%= @total_users %> registered users</div>
+    </div>
+  </div>
+
+  <div class="stat-card warning">
+    <div class="stat-icon warning">👷</div>
+    <div class="stat-meta">
+      <div class="stat-label">Total Laborers Registered</div>
+      <div class="stat-value"><%= @total_employees %></div>
+      <div class="stat-subtext">Across all businesses</div>
+    </div>
+  </div>
+
+  <div class="stat-card info">
+    <div class="stat-icon info">🏗️</div>
+    <div class="stat-meta">
+      <div class="stat-label">Total Active Works / Projects</div>
+      <div class="stat-value"><%= @total_projects %></div>
+    </div>
+  </div>
+
+  <div class="stat-card success">
+    <div class="stat-icon success">💰</div>
+    <div class="stat-meta">
+      <div class="stat-label">Total Platform Revenue Processed</div>
+      <div class="stat-value" style="color: var(--success-text);"><%= number_to_currency(@total_revenue_collected, unit: "₹") %></div>
+      <div class="stat-subtext">Invoiced: <%= number_to_currency(@total_invoices_amount, unit: "₹") %></div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Businesses Table -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <span>🏢</span> Onboarded Businesses
+    </div>
+    <%= link_to "+ Onboard New Business", new_super_admin_business_path, class: "btn btn-primary btn-sm" %>
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Business Name</th>
+          <th>Owner Contact</th>
+          <th>Laborers</th>
+          <th>Projects</th>
+          <th>Drive Storage</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @recent_businesses.each do |b| %>
+          <% owner = b.users.find_by(role: ["admin", "owner"]) || b.users.first %>
+          <tr>
+            <td>
+              <div style="font-weight: 700; color: #fff;">
+                <%= link_to b.name, super_admin_business_path(b) %>
+              </div>
+              <div style="font-size: 0.75rem; color: var(--text-dim);"><%= b.address.presence || b.email %></div>
+            </td>
+            <td>
+              <div style="font-weight: 600;"><%= owner&.full_name || "Unassigned" %></div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);"><%= owner&.email_address %> • <%= b.phone %></div>
+            </td>
+            <td><span class="badge badge-neutral"><%= b.employees.count %> Workers</span></td>
+            <td><span class="badge badge-info"><%= b.work_projects.count %> Works</span></td>
+            <td>
+              <% if b.google_drive_connected? %>
+                <span class="badge badge-success">✓ Google Drive</span>
+              <% else %>
+                <span class="badge badge-neutral">Local</span>
+              <% end %>
+            </td>
+            <td>
+              <div style="display: flex; gap: 0.35rem;">
+                <%= button_to "⚡ Switch In", switch_to_super_admin_business_path(b), method: :post, class: "btn btn-primary btn-sm" %>
+                <%= link_to "View", super_admin_business_path(b), class: "btn btn-secondary btn-sm" %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -40,12 +40,14 @@
       <div id="client_search_container" style="<%= project.client.present? ? 'display: none;' : 'display: block;' %> position: relative;">
         <div style="position: relative;">
           <input type="text"
+                 name="client_search_query"
                  id="client_search_input"
                  class="form-control"
                  placeholder="🔍 Search existing client or type to create new..."
                  autocomplete="off"
                  onfocus="openClientDropdown();"
-                 oninput="filterClientDropdown(this.value);" />
+                 oninput="filterClientDropdown(this.value);"
+                 onkeydown="if(event.key === 'Enter') { event.preventDefault(); selectFirstOrNewClient(); }" />
         </div>
 
         <!-- Dropdown Menu -->
@@ -222,6 +224,32 @@
     input.focus();
     openClientDropdown();
   }
+
+  function selectFirstOrNewClient() {
+    const query = document.getElementById('client_search_input').value.trim();
+    if (!query) return;
+
+    const matched = existingClients.find(c =>
+      c.name.toLowerCase() === query.toLowerCase() ||
+      c.name.toLowerCase().startsWith(query.toLowerCase())
+    );
+
+    if (matched) {
+      selectClient(matched.id, matched.name, (matched.company || matched.phone));
+    } else {
+      selectNewClient(query);
+    }
+  }
+
+  // Auto-sync search input on form submit if user typed without clicking
+  document.getElementById('project-form').addEventListener('submit', function() {
+    const selectedId = document.getElementById('selected_client_id').value;
+    const newName = document.getElementById('new_client_name_input').value;
+    const searchVal = document.getElementById('client_search_input').value.trim();
+    if (!selectedId && !newName && searchVal) {
+      document.getElementById('new_client_name_input').value = searchVal;
+    }
+  });
 
   // Close dropdown when clicking outside
   document.addEventListener('click', function(e) {

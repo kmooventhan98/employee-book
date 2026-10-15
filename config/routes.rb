@@ -9,17 +9,29 @@ Rails.application.routes.draw do
   # Business Settings
   resource :business_settings, only: %i[ show edit update ]
 
+  # Super Admin Platform Console (Platform Owner)
+  namespace :super_admin do
+    root to: "dashboard#index"
+    resources :businesses do
+      member do
+        post :switch_to
+      end
+    end
+    resources :users
+  end
+
   # Labour / Employee Management
   resources :employees do
     resources :advance_payments, only: %i[ new create destroy ]
     resources :wage_payouts, only: %i[ new create show ]
   end
 
-  # Fast Daily Attendance
+  # Fast Daily Attendance & Calendar
   resources :attendances do
     collection do
       get :bulk
       post :bulk_update
+      get :calendar
     end
   end
 
@@ -47,6 +59,9 @@ Rails.application.routes.draw do
   # P&L Analytics & Financial Reports
   get "reports/pnl", to: "reports#pnl", as: :pnl_report
   get "reports/work_pnl", to: "reports#work_pnl", as: :work_pnl_report
+
+  # Local Mailer Web Preview for Development
+  mount LetterOpenerWeb::Engine, at: "/letter_opener" if Rails.env.development?
 
   # Health check
   get "up" => "rails/health#show", as: :rails_health_check

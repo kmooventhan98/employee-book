@@ -1,0 +1,94 @@
+<% content_for :page_title do %>
+  <span>Business: <%= @business.name %></span>
+<% end %>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff;"><%= @business.name %></h2>
+      <span class="badge badge-neutral"><%= @business.currency_code %> (<%= @business.currency_symbol %>)</span>
+      <% if @business.google_drive_connected? %>
+        <span class="badge badge-success">Google Drive Connected</span>
+      <% end %>
+    </div>
+    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem;">
+      <%= @business.address %> • Phone: <%= @business.phone %> • Email: <%= @business.email %>
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <%= button_to "⚡ Switch into this Workspace", switch_to_super_admin_business_path(@business), method: :post, class: "btn btn-primary" %>
+    <%= link_to "← All Businesses", super_admin_businesses_path, class: "btn btn-secondary" %>
+  </div>
+</div>
+
+<!-- Business Quick Stats -->
+<div class="stats-grid" style="margin-bottom: 1.5rem;">
+  <div class="stat-card primary">
+    <div class="stat-icon primary">👥</div>
+    <div class="stat-meta">
+      <div class="stat-label">Users / Staff Accounts</div>
+      <div class="stat-value"><%= @users.count %></div>
+    </div>
+  </div>
+
+  <div class="stat-card warning">
+    <div class="stat-icon warning">👷</div>
+    <div class="stat-meta">
+      <div class="stat-label">Laborers Registered</div>
+      <div class="stat-value"><%= @employees.count %></div>
+    </div>
+  </div>
+
+  <div class="stat-card info">
+    <div class="stat-icon info">🏗️</div>
+    <div class="stat-meta">
+      <div class="stat-label">Works / Projects</div>
+      <div class="stat-value"><%= @projects.count %></div>
+    </div>
+  </div>
+
+  <div class="stat-card success">
+    <div class="stat-icon success">🧾</div>
+    <div class="stat-meta">
+      <div class="stat-label">Invoices Issued</div>
+      <div class="stat-value"><%= @invoices.count %></div>
+    </div>
+  </div>
+</div>
+
+<!-- Users In this Business -->
+<div class="card" style="margin-bottom: 2rem;">
+  <div class="card-header">
+    <div class="card-title">
+      <span>👤</span> Provisioned Users in <%= @business.name %>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Full Name</th>
+          <th>Login Email</th>
+          <th>Role</th>
+          <th>Created On</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @users.each do |u| %>
+          <tr>
+            <td style="font-weight: 700; color: #fff;"><%= u.full_name %></td>
+            <td><%= u.email_address %></td>
+            <td>
+              <span class="badge <%= u.super_admin? ? 'badge-danger' : (u.admin? ? 'badge-primary' : 'badge-neutral') %>">
+                <%= u.role_title %>
+              </span>
+            </td>
+            <td><%= u.created_at.strftime("%d %b %Y") %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

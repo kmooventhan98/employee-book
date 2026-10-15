@@ -1,0 +1,95 @@
+<% content_for :page_title do %>
+  <span>Onboard Business — Super Admin</span>
+<% end %>
+
+<div style="max-width: 750px; margin: 0 auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div>
+      <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff;">👑 Onboard New Business & Owner</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem;">Create a business tenant and provision login credentials for the business owner</p>
+    </div>
+    <%= link_to "← Super Admin Hub", super_admin_root_path, class: "btn btn-secondary btn-sm" %>
+  </div>
+
+  <div class="card">
+    <%= form_with model: [:super_admin, @business], local: true do |f| %>
+      <% if @business.errors.any? %>
+        <div class="alert alert-danger">
+          <%= @business.errors.full_messages.join(", ") %>
+        </div>
+      <% end %>
+
+      <h3 style="font-size: 0.95rem; font-weight: 700; color: #cbd5e1; margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">
+        1. Business Tenant Information
+      </h3>
+
+      <div class="form-group">
+        <%= f.label :name, "Business Name *", class: "form-label" %>
+        <%= f.text_field :name, required: true, autofocus: true, placeholder: "e.g. Royal Steel Fabrication", class: "form-control" %>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <%= f.label :currency_symbol, "Currency Symbol *", class: "form-label" %>
+          <%= f.select :currency_symbol, [["₹ (Rupee)", "₹"], ["$ (Dollar)", "$"], ["€ (Euro)", "€"], ["£ (Pound)", "£"], ["AED", "AED"]], {}, class: "form-select" %>
+        </div>
+        <div class="form-group">
+          <%= f.label :currency_code, "Currency Code", class: "form-label" %>
+          <%= f.text_field :currency_code, placeholder: "INR, USD, EUR", class: "form-control" %>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <%= f.label :phone, "Business Phone / WhatsApp", class: "form-label" %>
+          <%= f.telephone_field :phone, placeholder: "+91 98765 00000", class: "form-control" %>
+        </div>
+        <div class="form-group">
+          <%= f.label :email, "Business Email", class: "form-label" %>
+          <%= f.email_field :email, placeholder: "contact@business.com", class: "form-control" %>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <%= f.label :address, "Workshop / Office Address", class: "form-label" %>
+        <%= f.text_area :address, rows: 2, placeholder: "Street, Industrial Area, City", class: "form-control" %>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <%= f.label :tax_id, "GSTIN / Tax ID", class: "form-label" %>
+          <%= f.text_field :tax_id, placeholder: "e.g. 29AABCU9603R1ZM", class: "form-control" %>
+        </div>
+        <div class="form-group">
+          <%= f.label :invoice_prefix, "Invoice Prefix", class: "form-label" %>
+          <%= f.text_field :invoice_prefix, placeholder: "INV", class: "form-control" %>
+        </div>
+      </div>
+
+      <h3 style="font-size: 0.95rem; font-weight: 700; color: #cbd5e1; margin-top: 1.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">
+        2. Business Owner (Admin) Credentials
+      </h3>
+
+      <div class="form-group">
+        <label class="form-label">Owner Full Name *</label>
+        <%= text_field_tag :owner_name, nil, required: true, placeholder: "e.g. Anand Sharma", class: "form-control" %>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Owner Login Email *</label>
+          <%= email_field_tag :owner_email, nil, required: true, placeholder: "anand@royalsteel.com", class: "form-control" %>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Owner Temporary Password *</label>
+          <%= password_field_tag :owner_password, "password123", required: true, class: "form-control" %>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+        <%= f.submit "Onboard Business & Provision Owner", class: "btn btn-primary btn-lg", style: "flex: 1;" %>
+        <%= link_to "Cancel", super_admin_businesses_path, class: "btn btn-secondary" %>
+      </div>
+    <% end %>
+  </div>
+</div>

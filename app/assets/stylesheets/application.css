@@ -834,3 +834,430 @@ body::after {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   ATTENDANCE 1-TOUCH TILE VIEW & CALENDAR VIEW (MOBILE-FIRST)
+   ========================================================================== */
+
+.att-view-tabs {
+  display: inline-flex;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 3px;
+}
+
+.att-view-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.att-view-tab:hover {
+  color: #fff;
+  background: var(--bg-glass);
+}
+
+.att-view-tab.active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+}
+
+/* Worker Attendance Tile Card */
+.att-tiles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 600px) {
+  .att-tiles-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+.worker-tile {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--danger); /* default absent */
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  transition: var(--transition);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.worker-tile:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.worker-tile.status-present {
+  border-left-color: var(--success);
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.05) 0%, rgba(17, 24, 39, 0.9) 100%);
+}
+
+.worker-tile.status-half_day {
+  border-left-color: var(--warning);
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.05) 0%, rgba(17, 24, 39, 0.9) 100%);
+}
+
+.worker-tile.status-absent {
+  border-left-color: var(--danger);
+  background: linear-gradient(145deg, rgba(239, 68, 68, 0.05) 0%, rgba(17, 24, 39, 0.9) 100%);
+}
+
+.worker-tile.status-paid_leave {
+  border-left-color: var(--info);
+  background: linear-gradient(145deg, rgba(14, 165, 233, 0.05) 0%, rgba(17, 24, 39, 0.9) 100%);
+}
+
+.worker-tile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.worker-info-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.worker-avatar-tile {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #3b82f6);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s ease;
+}
+
+.worker-avatar-tile:active {
+  transform: scale(0.92);
+}
+
+.worker-name-role {
+  min-width: 0;
+}
+
+.worker-name-role h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.worker-rate-badge {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+/* 1-Touch Segmented Touch Tabs */
+.touch-tabs-group {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  gap: 3px;
+}
+
+.touch-tab-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px; /* touch target standard */
+  padding: 0.4rem 0.2rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+.touch-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.touch-tab-btn:active {
+  transform: scale(0.95);
+}
+
+.touch-tab-btn .tab-icon {
+  font-size: 1.05rem;
+  margin-bottom: 2px;
+}
+
+/* Tab active states */
+.touch-tab-btn.active-present {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+}
+
+.touch-tab-btn.active-half_day {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}
+
+.touch-tab-btn.active-absent {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+.touch-tab-btn.active-paid_leave {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+/* Overtime Stepper & Project Controls */
+.tile-extra-controls {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+@media (max-width: 480px) {
+  .tile-extra-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ot-touch-stepper {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.ot-step-btn {
+  width: 38px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.ot-step-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.ot-step-btn:active {
+  transform: scale(0.92);
+}
+
+.ot-val-display {
+  flex: 1;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+/* ==========================================================================
+   CALENDAR VIEW STYLES
+   ========================================================================== */
+
+.calendar-header-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.calendar-month-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.calendar-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 6px;
+}
+
+.calendar-weekday-header {
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.5rem 0;
+}
+
+.calendar-day-cell {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  height: 96px;
+  padding: 0.5rem;
+  vertical-align: top;
+  position: relative;
+  transition: var(--transition);
+  cursor: pointer;
+  text-decoration: none;
+  display: table-cell;
+}
+
+.calendar-day-cell:hover {
+  border-color: #6366f1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.calendar-day-cell.other-month {
+  opacity: 0.35;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.calendar-day-cell.is-today {
+  border-color: #6366f1;
+  background: linear-gradient(145deg, rgba(99, 102, 241, 0.15) 0%, rgba(17, 24, 39, 0.95) 100%);
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.25);
+}
+
+.calendar-day-cell.is-sunday {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.calendar-day-num {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.calendar-day-cell.is-today .calendar-day-num span:first-child {
+  background: var(--primary);
+  color: #fff;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+}
+
+.day-badge-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cal-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.cal-pill.present {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--success-text);
+}
+
+.cal-pill.half {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--warning-text);
+}
+
+.cal-pill.absent {
+  background: rgba(239, 68, 68, 0.18);
+  color: var(--danger-text);
+}
+
+.cal-wage-summary {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fbbf24;
+  margin-top: 4px;
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  .calendar-table {
+    border-spacing: 2px;
+  }
+  .calendar-day-cell {
+    height: 72px;
+    padding: 0.25rem;
+  }
+  .calendar-day-num {
+    font-size: 0.75rem;
+  }
+  .cal-pill {
+    font-size: 0.6rem;
+    padding: 1px 3px;
+  }
+  .cal-wage-summary {
+    display: none;
+  }
+}
+

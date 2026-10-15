@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background-color: #0a0e17;
+        color: #f8fafc;
+        margin: 0;
+        padding: 24px;
+      }
+      .email-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #111827;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      }
+      .email-header {
+        background: linear-gradient(135deg, #4f46e5, #3b82f6);
+        padding: 32px 24px;
+        text-align: center;
+      }
+      .brand-badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        font-weight: 800;
+        font-size: 1.25rem;
+        padding: 8px 16px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+      }
+      .email-body {
+        padding: 32px 28px;
+        color: #e2e8f0;
+        line-height: 1.6;
+      }
+      .credentials-box {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 12px;
+        padding: 20px;
+        margin: 24px 0;
+      }
+      .cred-item {
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+      }
+      .cred-label {
+        color: #94a3b8;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+      .cred-val {
+        font-family: monospace;
+        font-weight: 700;
+        color: #fff;
+        font-size: 1.1rem;
+      }
+      .btn-cta {
+        display: inline-block;
+        background: linear-gradient(135deg, #4f46e5, #4338ca);
+        color: #ffffff !important;
+        text-decoration: none;
+        padding: 14px 28px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 1rem;
+        margin-top: 16px;
+        text-align: center;
+      }
+      .features-list {
+        margin: 24px 0;
+        padding: 0;
+        list-style: none;
+      }
+      .feature-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 12px;
+        font-size: 0.92rem;
+      }
+      .feature-icon {
+        margin-right: 12px;
+        font-size: 1.2rem;
+      }
+      .email-footer {
+        padding: 20px 24px;
+        background: rgba(0, 0, 0, 0.2);
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        text-align: center;
+        font-size: 0.8rem;
+        color: #64748b;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-container">
+      <div class="email-header">
+        <div class="brand-badge"><%= @business.logo_initials %></div>
+        <h1 style="margin: 0; color: #fff; font-size: 1.6rem; font-weight: 800;">Welcome to KarigarBook</h1>
+        <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 0.95rem;">Small Business Labor & Finance OS</p>
+      </div>
+
+      <div class="email-body">
+        <h2 style="color: #fff; margin-top: 0; font-size: 1.25rem;">Hello <%= @owner.full_name %>,</h2>
+        <p>
+          Congratulations! Your business <strong><%= @business.name %></strong> has been onboarded onto <strong>KarigarBook</strong>.
+        </p>
+
+        <div class="credentials-box">
+          <div class="cred-item">
+            <div class="cred-label">Workspace Name</div>
+            <div class="cred-val" style="color: #818cf8;"><%= @business.name %></div>
+          </div>
+          <div class="cred-item">
+            <div class="cred-label">Owner Login Email</div>
+            <div class="cred-val"><%= @owner.email_address %></div>
+          </div>
+          <% if @temporary_password.present? %>
+            <div class="cred-item">
+              <div class="cred-label">Temporary Password</div>
+              <div class="cred-val" style="color: #34d399;"><%= @temporary_password %></div>
+            </div>
+          <% end %>
+          <div class="cred-item">
+            <div class="cred-label">Currency</div>
+            <div class="cred-val"><%= @business.currency_code %> (<%= @business.currency_symbol %>)</div>
+          </div>
+
+          <div style="text-align: center; margin-top: 18px;">
+            <a href="<%= @login_url %>" class="btn-cta">Sign In to Your Workspace →</a>
+          </div>
+        </div>
+
+        <h3 style="color: #fff; font-size: 1.05rem; margin-top: 24px;">🚀 What You Can Do in KarigarBook:</h3>
+        <ul class="features-list">
+          <li class="feature-item">
+            <span class="feature-icon">📝</span>
+            <div><strong>1-Touch Attendance Register:</strong> Mark daily attendance (Present, Half Day, Absent) and overtime hours in seconds from your mobile.</div>
+          </li>
+          <li class="feature-item">
+            <span class="feature-icon">☕</span>
+            <div><strong>Tea & Petty Cash Logger:</strong> Instantly record morning tea, worker lunch, transport & materials on the go.</div>
+          </li>
+          <li class="feature-item">
+            <span class="feature-icon">💸</span>
+            <div><strong>Labor Wages & Khata Advances:</strong> Automatic wage calculation with advance balance deduction on payout.</div>
+          </li>
+          <li class="feature-item">
+            <span class="feature-icon">🧾</span>
+            <div><strong>Quotations & Invoices:</strong> Create professional GST estimates and tax invoices with partial payment receipts.</div>
+          </li>
+          <li class="feature-item">
+            <span class="feature-icon">📈</span>
+            <div><strong>Work-wise Profit & Loss:</strong> See exact profit margins for each contract or fabrication job in real time.</div>
+          </li>
+        </ul>
+
+        <p style="font-size: 0.88rem; color: #94a3b8; margin-top: 20px;">
+          For security, please change your password after your first sign in under Business Settings.
+        </p>
+      </div>
+
+      <div class="email-footer">
+        KarigarBook Small Business Management Platform • Sent automatically upon business onboarding
+      </div>
+    </div>
+  </body>
+</html>

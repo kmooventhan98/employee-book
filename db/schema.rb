@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_164037) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_171953) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -212,11 +212,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_164037) do
     t.string "password_digest", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "business_id", null: false
+    t.integer "business_id"
     t.string "full_name"
     t.string "role", default: "owner"
+    t.integer "employee_id"
     t.index ["business_id"], name: "index_users_on_business_id"
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
+    t.index ["employee_id"], name: "index_users_on_employee_id"
   end
 
   create_table "wage_payouts", force: :cascade do |t|
@@ -272,6 +274,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_164037) do
   add_foreign_key "payment_receipts", "invoices"
   add_foreign_key "sessions", "users"
   add_foreign_key "users", "businesses"
+  add_foreign_key "users", "employees"
   add_foreign_key "wage_payouts", "businesses"
   add_foreign_key "wage_payouts", "employees"
   add_foreign_key "work_projects", "businesses"

@@ -1,4 +1,5 @@
 class ReportsController < ApplicationController
+  before_action :require_admin
   def pnl
     @month_date = params[:month].present? ? Date.parse(params[:month]) : Date.current.beginning_of_month
     @start_date = @month_date.beginning_of_month

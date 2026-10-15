@@ -32,15 +32,28 @@ business = Business.create!(
   google_drive_folder_id: "folder_apex_engineering_docs"
 )
 
-# 3. Create Owner User
-owner = business.users.create!(
-  full_name: "Ramesh Kumar",
-  email_address: "ramesh@apexengg.com",
+# 3. Create Super Admin (Platform Owner)
+super_admin = User.find_or_initialize_by(email_address: "superadmin@karigarbook.com")
+super_admin.assign_attributes(
+  full_name: "Platform Super Admin",
   password: "password123",
   password_confirmation: "password123",
-  role: "owner"
+  role: "super_admin",
+  business: nil
 )
+super_admin.save!
 
+# 4. Create Business Owner (Admin)
+owner = business.users.find_or_initialize_by(email_address: "ramesh@apexengg.com")
+owner.assign_attributes(
+  full_name: "Ramesh Kumar (Owner)",
+  password: "password123",
+  password_confirmation: "password123",
+  role: "admin"
+)
+owner.save!
+
+puts "✓ Created Super Admin: superadmin@karigarbook.com / password123"
 puts "✓ Created Business: #{business.name} (Owner: #{owner.email_address} / password123)"
 
 # 4. Create Clients
@@ -110,6 +123,18 @@ emp1 = business.employees.create!(
   status: "active",
   joined_date: Date.current - 6.months
 )
+
+# Create Employee User Account (Normal User)
+emp_user = business.users.find_or_initialize_by(email_address: "muthu@apexengg.com")
+emp_user.assign_attributes(
+  full_name: "Muthu Vel",
+  password: "password123",
+  password_confirmation: "password123",
+  role: "employee",
+  employee: emp1
+)
+emp_user.save!
+puts "✓ Created Employee User: #{emp_user.email_address} / password123 (Linked to Muthu Vel)"
 
 emp2 = business.employees.create!(
   name: "Basavaraj Patil",

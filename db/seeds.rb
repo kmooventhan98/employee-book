@@ -1,6 +1,8 @@
 puts "== Seeding KarigarBook Small Business Management OS =="
 
-# 1. Clean previous demo data
+# 1. Clean previous demo data in foreign-key dependency order
+Session.destroy_all
+User.destroy_all
 PaymentReceipt.destroy_all
 InvoiceItem.destroy_all
 Invoice.destroy_all
@@ -12,8 +14,6 @@ Attendance.destroy_all
 Employee.destroy_all
 WorkProject.destroy_all
 Client.destroy_all
-Session.destroy_all
-User.destroy_all
 Business.destroy_all
 
 # 2. Create Business

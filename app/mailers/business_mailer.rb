@@ -1,5 +1,5 @@
 class BusinessMailer < ApplicationMailer
-  default from: "KarigarBook Onboarding <welcome@karigarbook.com>"
+  default from: ENV.fetch("MAILER_DEFAULT_FROM", "KarigarBook <welcome@mooventhan.in>")
 
   def welcome_email(business, owner, temporary_password: nil)
     @business = business

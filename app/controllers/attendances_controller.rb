@@ -5,6 +5,7 @@ class AttendancesController < ApplicationController
 
   def bulk
     @selected_date = params[:date].present? ? Date.parse(params[:date]) : Date.current
+    @current_mode = params[:mode].presence || "tiles"
 
     if employee?
       @linked_employee = current_user.employee || current_business.employees.find_by("LOWER(name) = ? OR phone = ?", current_user.full_name.downcase, current_user.email_address)

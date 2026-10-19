@@ -19,8 +19,11 @@
   <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
     <!-- View Switcher -->
     <div class="att-view-tabs">
-      <%= link_to bulk_attendances_path, class: "att-view-tab" do %>
+      <%= link_to bulk_attendances_path(mode: 'tiles'), class: "att-view-tab" do %>
         <span>📱</span> 1-Touch Tiles
+      <% end %>
+      <%= link_to bulk_attendances_path(mode: 'table'), class: "att-view-tab" do %>
+        <span>📋</span> Table Mode
       <% end %>
       <%= link_to calendar_attendances_path(month: @month_date), class: "att-view-tab active" do %>
         <span>📅</span> Calendar View

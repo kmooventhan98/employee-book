@@ -846,6 +846,8 @@ body::after {
   gap: 3px;
 }
 
+button.att-view-tab,
+a.att-view-tab,
 .att-view-tab {
   display: inline-flex;
   align-items: center;
@@ -856,18 +858,85 @@ body::after {
   font-weight: 600;
   color: var(--text-muted);
   text-decoration: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
   transition: var(--transition);
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .att-view-tab:hover {
   color: #fff;
-  background: var(--bg-glass);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .att-view-tab.active {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary) !important;
+  color: #fff !important;
   box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+}
+
+/* Table Mode Attendance Status Button */
+.tbl-status-group {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.tbl-status-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.tbl-status-btn:hover {
+  color: #fff;
+  border-color: var(--border-hover);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tbl-status-btn.active-present {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: var(--success) !important;
+  color: var(--success-text) !important;
+  font-weight: 700;
+}
+
+.tbl-status-btn.active-half_day {
+  background: rgba(245, 158, 11, 0.2) !important;
+  border-color: var(--warning) !important;
+  color: var(--warning-text) !important;
+  font-weight: 700;
+}
+
+.tbl-status-btn.active-absent {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: var(--danger) !important;
+  color: var(--danger-text) !important;
+  font-weight: 700;
+}
+
+.tbl-status-btn.active-paid_leave {
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-color: var(--info) !important;
+  color: var(--info-text) !important;
+  font-weight: 700;
 }
 
 /* Worker Attendance Tile Card */

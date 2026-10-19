@@ -19,10 +19,10 @@
   <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
     <!-- View Switcher -->
     <div class="att-view-tabs">
-      <button type="button" onclick="switchAttMode('tiles')" id="tab-btn-tiles" class="att-view-tab active">
+      <button type="button" onclick="switchAttMode('tiles')" id="tab-btn-tiles" class="att-view-tab <%= 'active' if @current_mode != 'table' %>">
         <span>📱</span> 1-Touch Tiles
       </button>
-      <button type="button" onclick="switchAttMode('table')" id="tab-btn-table" class="att-view-tab">
+      <button type="button" onclick="switchAttMode('table')" id="tab-btn-table" class="att-view-tab <%= 'active' if @current_mode == 'table' %>">
         <span>📋</span> Table Mode
       </button>
       <%= link_to calendar_attendances_path(month: @selected_date.beginning_of_month), class: "att-view-tab" do %>
@@ -32,11 +32,12 @@
 
     <!-- Date Navigator -->
     <%= form_with url: bulk_attendances_path, method: :get, local: true, style: "display: flex; align-items: center; gap: 0.35rem;" do |df| %>
-      <%= link_to "←", bulk_attendances_path(date: @selected_date - 1.day), class: "btn btn-secondary btn-sm", title: "Yesterday" %>
+      <%= hidden_field_tag :mode, @current_mode, id: "date-nav-mode" %>
+      <%= link_to "←", bulk_attendances_path(date: @selected_date - 1.day, mode: @current_mode), class: "btn btn-secondary btn-sm", title: "Yesterday" %>
       <%= df.date_field :date, value: @selected_date, onchange: "this.form.submit();", class: "form-control", style: "width: auto; padding: 0.4rem 0.6rem; font-size: 0.88rem;" %>
-      <%= link_to "→", bulk_attendances_path(date: @selected_date + 1.day), class: "btn btn-secondary btn-sm", title: "Tomorrow" %>
+      <%= link_to "→", bulk_attendances_path(date: @selected_date + 1.day, mode: @current_mode), class: "btn btn-secondary btn-sm", title: "Tomorrow" %>
       <% unless @selected_date == Date.current %>
-        <%= link_to "Today", bulk_attendances_path(date: Date.current), class: "btn btn-primary btn-sm" %>
+        <%= link_to "Today", bulk_attendances_path(date: Date.current, mode: @current_mode), class: "btn btn-primary btn-sm" %>
       <% end %>
     <% end %>
   </div>
@@ -207,13 +208,19 @@
               <label class="form-label" style="font-size: 0.72rem; margin-bottom: 2px;">Work Site / Job</label>
               <%= select_tag "attendances[#{emp.id}][work_project_id]",
                     options_for_select([["🏭 Shop Floor", ""]] + @active_projects.map { |p| ["🏗️ #{p.title.truncate(24)}", p.id] }, att.work_project_id),
+                    id: "tile_project_#{emp.id}",
+                    onchange: "syncTileProject(#{emp.id}, this.value)",
                     class: "form-select", style: "font-size: 0.8rem; padding: 0.45rem 0.6rem;" %>
             </div>
           </div>
 
           <!-- Remarks note -->
           <div>
-            <%= text_field_tag "attendances[#{emp.id}][notes]", att.notes, placeholder: "Notes (e.g. came late, site welding)", class: "form-control", style: "font-size: 0.8rem; padding: 0.4rem 0.65rem;" %>
+            <%= text_field_tag "attendances[#{emp.id}][notes]", att.notes,
+                  id: "tile_notes_#{emp.id}",
+                  oninput: "syncTileNotes(#{emp.id}, this.value)",
+                  placeholder: "Notes (e.g. came late, site welding)",
+                  class: "form-control", style: "font-size: 0.8rem; padding: 0.4rem 0.65rem;" %>
           </div>
         </div>
       <% end %>
@@ -222,50 +229,84 @@
     <!-- ============================================================= -->
     <!-- 2. TRADITIONAL SPREADSHEET TABLE MODE (DESKTOP / ALTERNATIVE) -->
     <!-- ============================================================= -->
-    <div id="mode-table" class="card" style="padding: 0.5rem; display: none; margin-bottom: 1.5rem;">
+    <div id="mode-table" class="card" style="padding: 0.5rem; display: <%= @current_mode == 'table' ? 'block' : 'none' %>; margin-bottom: 1.5rem;">
       <div class="table-responsive">
         <table class="data-table">
           <thead>
             <tr>
-              <th style="min-width: 170px;">Laborer / Employee</th>
-              <th style="min-width: 260px;">Attendance Status</th>
-              <th style="min-width: 100px;">OT Hours</th>
-              <th style="min-width: 200px;">Assigned Work</th>
-              <th style="min-width: 140px;">Remarks</th>
+              <th style="min-width: 180px;">Laborer / Employee</th>
+              <th style="min-width: 320px;">Attendance Status</th>
+              <th style="min-width: 130px;">OT Hours</th>
+              <th style="min-width: 190px;">Assigned Work</th>
+              <th style="min-width: 160px;">Remarks</th>
             </tr>
           </thead>
           <tbody>
             <% @attendance_records.each do |att| %>
               <% emp = att.employee %>
+              <% current_status = att.status.presence || "absent" %>
               <tr>
                 <td>
-                  <div style="font-weight: 700; color: #fff;"><%= emp.name %></div>
-                  <div style="font-size: 0.75rem; color: var(--text-dim);"><%= emp.role_title %></div>
-                </td>
-                <td>
-                  <div style="display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap;">
-                    <label style="cursor: pointer; padding: 0.3rem 0.5rem; border-radius: 4px; background: rgba(16, 185, 129, 0.12); color: var(--success-text); font-size: 0.78rem;">
-                      <input type="radio" name="table_status_<%= emp.id %>" onchange="setStatus(<%= emp.id %>, 'present')" <%= 'checked' if att.status == 'present' %>> Present
-                    </label>
-                    <label style="cursor: pointer; padding: 0.3rem 0.5rem; border-radius: 4px; background: rgba(245, 158, 11, 0.12); color: var(--warning-text); font-size: 0.78rem;">
-                      <input type="radio" name="table_status_<%= emp.id %>" onchange="setStatus(<%= emp.id %>, 'half_day')" <%= 'checked' if att.status == 'half_day' %>> Half Day
-                    </label>
-                    <label style="cursor: pointer; padding: 0.3rem 0.5rem; border-radius: 4px; background: rgba(239, 68, 68, 0.12); color: var(--danger-text); font-size: 0.78rem;">
-                      <input type="radio" name="table_status_<%= emp.id %>" onchange="setStatus(<%= emp.id %>, 'absent')" <%= 'checked' if att.status == 'absent' %>> Absent
-                    </label>
-                    <label style="cursor: pointer; padding: 0.3rem 0.5rem; border-radius: 4px; background: rgba(59, 130, 246, 0.12); color: var(--info-text); font-size: 0.78rem;">
-                      <input type="radio" name="table_status_<%= emp.id %>" onchange="setStatus(<%= emp.id %>, 'paid_leave')" <%= 'checked' if att.status == 'paid_leave' %>> Leave
-                    </label>
+                  <div style="display: flex; align-items: center; gap: 0.6rem;">
+                    <div style="width: 30px; height: 30px; border-radius: 6px; background: rgba(79, 70, 229, 0.2); color: #818cf8; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; flex-shrink: 0;">
+                      <%= emp.name.first.upcase %>
+                    </div>
+                    <div>
+                      <div style="font-weight: 700; color: #fff; font-size: 0.88rem;"><%= emp.name %></div>
+                      <div style="font-size: 0.75rem; color: var(--text-dim);">
+                        <%= emp.role_title.presence || "Worker" %> • <%= current_business.formatted_currency(emp.base_rate) %>
+                      </div>
+                    </div>
                   </div>
                 </td>
                 <td>
-                  <span id="table_ot_disp_<%= emp.id %>"><%= att.overtime_hours %>h</span>
+                  <div class="tbl-status-group">
+                    <button type="button"
+                            id="tbl_btn_<%= emp.id %>_present"
+                            onclick="setStatus(<%= emp.id %>, 'present')"
+                            class="tbl-status-btn <%= 'active-present' if current_status == 'present' %>">
+                      <span>✓</span> Present
+                    </button>
+                    <button type="button"
+                            id="tbl_btn_<%= emp.id %>_half_day"
+                            onclick="setStatus(<%= emp.id %>, 'half_day')"
+                            class="tbl-status-btn <%= 'active-half_day' if current_status == 'half_day' %>">
+                      <span>½</span> Half Day
+                    </button>
+                    <button type="button"
+                            id="tbl_btn_<%= emp.id %>_absent"
+                            onclick="setStatus(<%= emp.id %>, 'absent')"
+                            class="tbl-status-btn <%= 'active-absent' if current_status == 'absent' %>">
+                      <span>✗</span> Absent
+                    </button>
+                    <button type="button"
+                            id="tbl_btn_<%= emp.id %>_paid_leave"
+                            onclick="setStatus(<%= emp.id %>, 'paid_leave')"
+                            class="tbl-status-btn <%= 'active-paid_leave' if current_status == 'paid_leave' %>">
+                      <span>🏖️</span> Leave
+                    </button>
+                  </div>
                 </td>
                 <td>
-                  <span style="font-size: 0.85rem;"><%= att.work_project&.title || "Shop Floor" %></span>
+                  <div style="display: inline-flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 3px 5px;">
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 7px; font-size: 0.75rem; min-height: auto;" onclick="adjustOT(<%= emp.id %>, -0.5)">−</button>
+                    <span id="table_ot_disp_<%= emp.id %>" style="min-width: 42px; text-align: center; font-weight: 700; color: #fff; font-size: 0.82rem;"><%= att.overtime_hours.to_f > 0 ? "#{att.overtime_hours}h" : "0.0h" %></span>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 7px; font-size: 0.75rem; min-height: auto;" onclick="adjustOT(<%= emp.id %>, 0.5)">+</button>
+                  </div>
                 </td>
                 <td>
-                  <span style="font-size: 0.85rem; color: var(--text-dim);"><%= att.notes %></span>
+                  <%= select_tag "table_project_#{emp.id}",
+                        options_for_select([["🏭 Shop Floor", ""]] + @active_projects.map { |p| ["🏗️ #{p.title.truncate(18)}", p.id] }, att.work_project_id),
+                        class: "form-select",
+                        style: "font-size: 0.8rem; padding: 0.35rem 0.5rem; width: 100%; max-width: 180px;",
+                        onchange: "syncProject(#{emp.id}, this.value)" %>
+                </td>
+                <td>
+                  <%= text_field_tag "table_notes_#{emp.id}", att.notes,
+                        placeholder: "Notes...",
+                        class: "form-control",
+                        style: "font-size: 0.8rem; padding: 0.35rem 0.5rem; width: 100%; max-width: 170px;",
+                        oninput: "syncNotes(#{emp.id}, this.value)" %>
                 </td>
               </tr>
             <% end %>
@@ -295,40 +336,52 @@
       radio.checked = true;
     }
 
-    // 2. Update segmented tab styling
+    // 2. Update segmented tab styling (Tile mode)
     const tile = document.getElementById(`tile_${empId}`);
-    if (!tile) return;
+    if (tile) {
+      tile.querySelectorAll('.touch-tab-btn').forEach(btn => {
+        btn.className = 'touch-tab-btn';
+      });
 
-    tile.querySelectorAll('.touch-tab-btn').forEach(btn => {
-      btn.className = 'touch-tab-btn';
+      const activeBtn = document.getElementById(`btn_${empId}_${status}`);
+      if (activeBtn) {
+        activeBtn.className = `touch-tab-btn active-${status}`;
+      }
+
+      // 3. Update worker tile card border & atmospheric background
+      tile.className = `worker-tile status-${status}`;
+
+      // 4. Update the visual badge
+      const badge = document.getElementById(`badge_${empId}`);
+      if (badge) {
+        const labels = {
+          present: '✓ Present',
+          half_day: '½ Half Day',
+          absent: '✗ Absent',
+          paid_leave: '🏖️ Leave'
+        };
+        const badgeClasses = {
+          present: 'badge badge-success',
+          half_day: 'badge badge-warning',
+          absent: 'badge badge-danger',
+          paid_leave: 'badge badge-info'
+        };
+        badge.textContent = labels[status] || status;
+        badge.className = badgeClasses[status] || 'badge';
+      }
+    }
+
+    // 5. Update Table Mode buttons
+    ['present', 'half_day', 'absent', 'paid_leave'].forEach(s => {
+      const tblBtn = document.getElementById(`tbl_btn_${empId}_${s}`);
+      if (tblBtn) {
+        if (s === status) {
+          tblBtn.className = `tbl-status-btn active-${s}`;
+        } else {
+          tblBtn.className = 'tbl-status-btn';
+        }
+      }
     });
-
-    const activeBtn = document.getElementById(`btn_${empId}_${status}`);
-    if (activeBtn) {
-      activeBtn.className = `touch-tab-btn active-${status}`;
-    }
-
-    // 3. Update worker tile card border & atmospheric background
-    tile.className = `worker-tile status-${status}`;
-
-    // 4. Update the visual badge
-    const badge = document.getElementById(`badge_${empId}`);
-    if (badge) {
-      const labels = {
-        present: '✓ Present',
-        half_day: '½ Half Day',
-        absent: '✗ Absent',
-        paid_leave: '🏖️ Leave'
-      };
-      const badgeClasses = {
-        present: 'badge badge-success',
-        half_day: 'badge badge-warning',
-        absent: 'badge badge-danger',
-        paid_leave: 'badge badge-info'
-      };
-      badge.textContent = labels[status] || status;
-      badge.className = badgeClasses[status] || 'badge';
-    }
 
     recalcSummaryCounts();
   }
@@ -346,15 +399,37 @@
   function adjustOT(empId, delta) {
     const input = document.getElementById(`ot_input_${empId}`);
     const display = document.getElementById(`ot_disp_${empId}`);
-    if (input && display) {
+    const tableDisp = document.getElementById(`table_ot_disp_${empId}`);
+    if (input) {
       let val = (parseFloat(input.value) || 0) + delta;
       val = Math.max(0, Math.round(val * 10) / 10);
       input.value = val;
-      display.textContent = val > 0 ? (val + 'h OT') : '0.0h';
-
-      const tableDisp = document.getElementById(`table_ot_disp_${empId}`);
-      if (tableDisp) tableDisp.textContent = val + 'h';
+      const otText = val > 0 ? (val + 'h OT') : '0.0h';
+      const tblText = val > 0 ? (val + 'h') : '0.0h';
+      if (display) display.textContent = otText;
+      if (tableDisp) tableDisp.textContent = tblText;
     }
+  }
+
+  // Two-way synchronization between Tile controls and Table controls
+  function syncProject(empId, val) {
+    const tileSelect = document.getElementById(`tile_project_${empId}`);
+    if (tileSelect) tileSelect.value = val;
+  }
+
+  function syncNotes(empId, val) {
+    const tileNotes = document.getElementById(`tile_notes_${empId}`);
+    if (tileNotes) tileNotes.value = val;
+  }
+
+  function syncTileProject(empId, val) {
+    const tblSelect = document.getElementById(`table_project_${empId}`);
+    if (tblSelect) tblSelect.value = val;
+  }
+
+  function syncTileNotes(empId, val) {
+    const tblNotes = document.getElementById(`table_notes_${empId}`);
+    if (tblNotes) tblNotes.value = val;
   }
 
   // Bulk actions for manager
@@ -387,17 +462,43 @@
     const tableDiv = document.getElementById('mode-table');
     const btnTiles = document.getElementById('tab-btn-tiles');
     const btnTable = document.getElementById('tab-btn-table');
+    const dateNavMode = document.getElementById('date-nav-mode');
+
+    if (!tilesDiv || !tableDiv) return;
 
     if (mode === 'tiles') {
       tilesDiv.style.display = 'grid';
       tableDiv.style.display = 'none';
-      btnTiles.className = 'att-view-tab active';
-      btnTable.className = 'att-view-tab';
+      if (btnTiles) btnTiles.className = 'att-view-tab active';
+      if (btnTable) btnTable.className = 'att-view-tab';
+      if (dateNavMode) dateNavMode.value = 'tiles';
+      localStorage.setItem('att_view_mode', 'tiles');
+      try {
+        const url = new URL(window.location);
+        url.searchParams.set('mode', 'tiles');
+        window.history.replaceState({}, '', url);
+      } catch (e) {}
     } else {
       tilesDiv.style.display = 'none';
       tableDiv.style.display = 'block';
-      btnTiles.className = 'att-view-tab';
-      btnTable.className = 'att-view-tab active';
+      if (btnTiles) btnTiles.className = 'att-view-tab';
+      if (btnTable) btnTable.className = 'att-view-tab active';
+      if (dateNavMode) dateNavMode.value = 'table';
+      localStorage.setItem('att_view_mode', 'table');
+      try {
+        const url = new URL(window.location);
+        url.searchParams.set('mode', 'table');
+        window.history.replaceState({}, '', url);
+      } catch (e) {}
     }
   }
+
+  // Auto-restore preferred mode on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode') || localStorage.getItem('att_view_mode');
+    if (mode) {
+      switchAttMode(mode);
+    }
+  });
 </script>

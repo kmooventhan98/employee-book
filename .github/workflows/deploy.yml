@@ -1,0 +1,41 @@
+name: Auto Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: Deploy to GCP VM
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH and Deploy to Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            echo "🚀 Starting deployment on server..."
+            cd /var/www/employee-book
+            
+            echo "📥 Pulling latest code..."
+            git pull origin main
+            
+            echo "📦 Installing gems..."
+            ~/.rvm/bin/rvm default do bundle install
+            
+            echo "🗄️ Running migrations..."
+            RAILS_ENV=production ~/.rvm/bin/rvm default do bin/rails db:prepare
+            
+            echo "🔄 Restarting application..."
+            if systemctl is-active --quiet employee-book; then
+              sudo systemctl restart employee-book
+            else
+              pkill -f puma || pkill -f rails || true
+              nohup bin/rails server -e production -b 0.0.0.0 -p 3000 > log/production.log 2>&1 &
+            fi
+            
+            echo "✅ Deployment completed successfully!"

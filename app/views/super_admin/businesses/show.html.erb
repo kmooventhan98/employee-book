@@ -73,6 +73,7 @@
           <th>Login Email</th>
           <th>Role</th>
           <th>Created On</th>
+          <th style="text-align: right;">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -86,6 +87,15 @@
               </span>
             </td>
             <td><%= u.created_at.strftime("%d %b %Y") %></td>
+            <td style="text-align: right;">
+              <%= button_to resend_welcome_email_super_admin_business_path(@business, user_id: u.id),
+                            method: :post,
+                            class: "btn btn-secondary btn-sm",
+                            data: { turbo: false },
+                            style: "display: inline-flex; align-items: center; gap: 0.35rem;" do %>
+                <span>📧 Resend Welcome Email</span>
+              <% end %>
+            </td>
           </tr>
         <% end %>
       </tbody>

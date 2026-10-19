@@ -17,6 +17,7 @@ Rails.application.routes.draw do
     resources :businesses do
       member do
         post :switch_to
+        post :resend_welcome_email
       end
     end
     resources :users

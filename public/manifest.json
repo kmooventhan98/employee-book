@@ -1,0 +1,56 @@
+{
+  "name": "KarigarBook — Labor & Business OS",
+  "short_name": "KarigarBook",
+  "description": "Mobile Labor Attendance, Worker Khata, Daily Petty Cash & Invoicing for Small Businesses",
+  "start_url": "/?pwa=1",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a0e17",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Daily Attendance Register",
+      "short_name": "Attendance",
+      "description": "Mark today's 1-touch worker attendance",
+      "url": "/attendances/bulk",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Log Daily Expense",
+      "short_name": "Log Expense",
+      "description": "Quick record morning tea, lunch & materials",
+      "url": "/expenses/new",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Invoices & Quotations",
+      "short_name": "Invoices",
+      "description": "View client tax estimates and invoices",
+      "url": "/invoices",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

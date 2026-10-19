@@ -12,7 +12,16 @@
 
     <%= yield :head %>
 
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KarigarBook">
+    <meta name="theme-color" content="#4f46e5">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -109,6 +118,13 @@
                 <% end %>
               <% end %>
             <% end %>
+
+            <!-- PWA Mobile App Install Shortcut -->
+            <div style="margin-top: auto; padding: 0.5rem 0.75rem;" id="sidebar-pwa-container">
+              <a href="javascript:void(0)" onclick="triggerPWAInstall()" class="nav-link" id="sidebar-pwa-btn" style="color: #a5b4fc; background: rgba(99, 102, 241, 0.12); border: 1px dashed rgba(99, 102, 241, 0.4); border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 600; padding: 0.45rem 0.65rem;">
+                <span class="nav-icon">📲</span> Install Phone App
+              </a>
+            </div>
           </nav>
 
           <div class="sidebar-footer">
@@ -256,5 +272,120 @@
         </div>
       </div>
     <% end %>
+
+    <!-- PWA Install Banner (Android / Chrome / Desktop) -->
+    <div id="pwa-install-banner" class="pwa-install-banner">
+      <div class="pwa-app-icon">
+        <img src="/icon-192.png" alt="KarigarBook Logo">
+      </div>
+      <div class="pwa-meta">
+        <h4 class="pwa-title">Install KarigarBook</h4>
+        <p class="pwa-desc">1-Tap attendance, worker khata & daily expenses on your home screen</p>
+      </div>
+      <div class="pwa-actions">
+        <button type="button" class="btn-pwa-install" onclick="executePWAInstall()">
+          <span>📲 Install</span>
+        </button>
+        <button type="button" class="btn-pwa-close" onclick="dismissPWABanner()" title="Close">
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <!-- iOS Add to Home Screen Instructions Sheet -->
+    <div id="pwa-ios-sheet" class="pwa-ios-sheet">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div class="pwa-app-icon" style="width: 42px; height: 42px;">
+            <img src="/icon-192.png" alt="KarigarBook Logo" style="width: 32px; height: 32px;">
+          </div>
+          <div>
+            <h4 style="margin: 0; color: #fff; font-size: 0.95rem; font-weight: 800;">Install KarigarBook on iPhone</h4>
+            <p style="margin: 2px 0 0 0; color: var(--text-muted); font-size: 0.75rem;">Fast 1-tap access from your home screen</p>
+          </div>
+        </div>
+        <button type="button" class="btn-pwa-close" onclick="dismissIOSSheet()">✕</button>
+      </div>
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem; font-size: 0.82rem; color: #cbd5e1; line-height: 1.6;">
+        1. Tap the <strong>Share</strong> button <span style="font-size: 1rem;">⎋</span> in your Safari toolbar below.<br>
+        2. Scroll down and tap <strong>Add to Home Screen ➕</strong>.<br>
+        3. Tap <strong>Add</strong> at top right to install!
+      </div>
+    </div>
+
+    <!-- PWA Service Worker & Install Handler -->
+    <script>
+      let deferredPrompt = null;
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+      // 1. Register Service Worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('[PWA] Service Worker registered:', reg.scope))
+            .catch(err => console.log('[PWA] Service Worker registration failed:', err));
+        });
+      }
+
+      // 2. Capture Chrome / Android / Desktop Install Prompt
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+
+        // Auto-show floating banner after 2.5s if not installed and not dismissed recently
+        if (!isStandalone && !localStorage.getItem('pwa_dismissed_at')) {
+          setTimeout(() => {
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) banner.classList.add('show');
+          }, 2500);
+        }
+      });
+
+      function executePWAInstall() {
+        if (!deferredPrompt) {
+          alert('To install KarigarBook on your home screen:\n\n• Android: Tap browser menu (⋮) ➔ "Install app"\n• iPhone: Tap Share (⎋) ➔ "Add to Home Screen"');
+          return;
+        }
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('[PWA] User accepted install prompt');
+            dismissPWABanner();
+          }
+          deferredPrompt = null;
+        });
+      }
+
+      function dismissPWABanner() {
+        const banner = document.getElementById('pwa-install-banner');
+        if (banner) banner.classList.remove('show');
+        localStorage.setItem('pwa_dismissed_at', Date.now());
+      }
+
+      // 3. iOS Detection & Trigger
+      const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+      function triggerPWAInstall() {
+        if (deferredPrompt) {
+          executePWAInstall();
+        } else if (isIos && !isStandalone) {
+          const sheet = document.getElementById('pwa-ios-sheet');
+          if (sheet) sheet.classList.add('show');
+        } else {
+          executePWAInstall();
+        }
+      }
+
+      function dismissIOSSheet() {
+        const sheet = document.getElementById('pwa-ios-sheet');
+        if (sheet) sheet.classList.remove('show');
+        localStorage.setItem('pwa_ios_dismissed', 'true');
+      }
+
+      // Hide sidebar install button if already in standalone app mode
+      if (isStandalone) {
+        const sideContainer = document.getElementById('sidebar-pwa-container');
+        if (sideContainer) sideContainer.style.display = 'none';
+      }
+    </script>
   </body>
 </html>

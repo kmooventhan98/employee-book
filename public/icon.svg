@@ -1,3 +1,61 @@
-<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="256" cy="256" r="256" fill="red"/>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19"/>
+      <stop offset="45%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#312e81"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="40%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Squircle -->
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bgGrad)"/>
+  <rect x="16" y="16" width="480" height="480" rx="112" stroke="url(#glowGrad)" stroke-width="6" stroke-opacity="0.35"/>
+
+  <!-- Subtle tech grid -->
+  <circle cx="256" cy="256" r="180" stroke="#ffffff" stroke-opacity="0.04" stroke-width="2"/>
+  <circle cx="256" cy="256" r="120" stroke="#ffffff" stroke-opacity="0.04" stroke-width="2"/>
+
+  <!-- Book Pages Accent -->
+  <path d="M130 190 C130 170 150 160 180 160 C220 160 248 175 256 190 C264 175 292 160 332 160 C362 160 382 170 382 190 V360 C382 340 362 330 332 330 C292 330 264 345 256 360 C248 345 220 330 180 330 C150 330 130 340 130 360 Z" fill="#ffffff" fill-opacity="0.08"/>
+
+  <!-- Ruler Tool (Diagonal Left-Right) -->
+  <g transform="rotate(-40 256 260)">
+    <rect x="236" y="145" width="40" height="230" rx="8" fill="url(#glowGrad)"/>
+    <!-- Ruler hash marks -->
+    <rect x="236" y="170" width="14" height="3" fill="#ffffff" opacity="0.8"/>
+    <rect x="236" y="200" width="20" height="3" fill="#ffffff" opacity="0.9"/>
+    <rect x="236" y="230" width="14" height="3" fill="#ffffff" opacity="0.8"/>
+    <rect x="236" y="260" width="20" height="3" fill="#ffffff" opacity="0.9"/>
+    <rect x="236" y="290" width="14" height="3" fill="#ffffff" opacity="0.8"/>
+    <rect x="236" y="320" width="20" height="3" fill="#ffffff" opacity="0.9"/>
+    <rect x="236" y="350" width="14" height="3" fill="#ffffff" opacity="0.8"/>
+  </g>
+
+  <!-- Artisan Hammer Tool (Diagonal Right-Left) -->
+  <g transform="rotate(40 256 260)">
+    <!-- Handle -->
+    <rect x="244" y="160" width="24" height="210" rx="6" fill="#e2e8f0"/>
+    <rect x="244" y="280" width="24" height="90" rx="6" fill="#1e293b"/>
+    <rect x="244" y="295" width="24" height="8" fill="url(#goldGrad)"/>
+    <rect x="244" y="315" width="24" height="8" fill="url(#goldGrad)"/>
+    <!-- Head -->
+    <path d="M216 142 H296 C300 142 304 146 304 150 V184 C304 188 300 192 296 192 H216 C212 192 208 188 208 184 V150 C208 146 212 142 216 142 Z" fill="url(#goldGrad)"/>
+    <path d="M296 142 C316 142 334 132 344 118 C332 148 322 178 296 192 Z" fill="url(#goldGrad)"/>
+  </g>
+
+  <!-- Brand Typography Initials "KB" badge -->
+  <rect x="186" y="390" width="140" height="40" rx="20" fill="#1e1b4b" stroke="url(#goldGrad)" stroke-width="2"/>
+  <text x="256" y="417" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="3">KARIGAR</text>
+
+  <!-- Sparkle Star Accent -->
+  <path d="M390 120 Q390 140 370 140 Q390 140 390 160 Q390 140 410 140 Q390 140 390 120 Z" fill="url(#goldGrad)"/>
 </svg>

@@ -120,7 +120,7 @@
                 </div>
               </div>
             </div>
-            <%= button_to "Sign out", session_path, method: :delete, class: "btn btn-secondary btn-sm", style: "width: 100%;" %>
+            <%= button_to "🚪 Sign out", session_path, method: :delete, class: "btn btn-secondary btn-sm", style: "width: 100%;", data: { turbo: false } %>
           </div>
         </aside>
 
@@ -152,6 +152,8 @@
                 <%= link_to "📝 Attendance", bulk_attendances_path, class: "btn btn-primary btn-sm" %>
                 <%= link_to "+ Expense", new_expense_path, class: "btn btn-secondary btn-sm" %>
               <% end %>
+
+              <%= button_to "Sign out", session_path, method: :delete, class: "btn btn-secondary btn-sm", style: "display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.65rem; font-size: 0.8rem;", data: { turbo: false } %>
             </div>
           </header>
 
@@ -186,9 +188,9 @@
               <span class="icon">📊</span>
               <span>App</span>
             <% end %>
-            <%= link_to bulk_attendances_path, class: "mobile-nav-item #{'active' if request.path.include?('attendances')}" do %>
-              <span class="icon">📝</span>
-              <span>Attendance</span>
+            <%= link_to signout_path, class: "mobile-nav-item", data: { turbo: false } do %>
+              <span class="icon">🚪</span>
+              <span>Sign out</span>
             <% end %>
           <% elsif admin? %>
             <%= link_to root_path, class: "mobile-nav-item #{'active' if current_page?(root_path)}" do %>

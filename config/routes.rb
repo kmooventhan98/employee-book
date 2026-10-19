@@ -3,6 +3,8 @@ Rails.application.routes.draw do
 
   # Auth & Registration
   resource :session, only: %i[ new create destroy ]
+  get "signout", to: "sessions#destroy", as: :signout
+  delete "signout", to: "sessions#destroy"
   resource :registration, only: %i[ new create ]
   resources :passwords, param: :token
 

@@ -66,6 +66,9 @@ Rails.application.routes.draw do
   # Local Mailer Web Preview for Development
   mount LetterOpenerWeb::Engine, at: "/letter_opener" if Rails.env.development?
 
+  # PWA Service Worker alias
+  get "service-worker.js", to: redirect("/sw.js")
+
   # Health check
   get "up" => "rails/health#show", as: :rails_health_check
 end

@@ -30,6 +30,9 @@ jobs:
             echo "🗄️ Running migrations..."
             RAILS_ENV=production ~/.rvm/bin/rvm default do bin/rails db:prepare
             
+            echo "🎨 Precompiling assets..."
+            RAILS_ENV=production ~/.rvm/bin/rvm default do bin/rails assets:precompile
+            
             echo "🔄 Restarting application..."
             if systemctl is-active --quiet employee-book; then
               sudo systemctl restart employee-book

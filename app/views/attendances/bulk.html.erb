@@ -2,6 +2,83 @@
   <span>Daily Attendance Register</span>
 <% end %>
 
+<style>
+  /* Ensure tab switchers render identically across all browsers and tags */
+  .att-view-tabs .att-view-tab {
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    color: var(--text-muted) !important;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .att-view-tabs .att-view-tab:hover {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+  }
+  .att-view-tabs .att-view-tab.active {
+    background: var(--primary) !important;
+    color: #fff !important;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+  }
+
+  /* Table mode status buttons */
+  .tbl-status-group {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .tbl-status-btn {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #94a3b8 !important;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    outline: none;
+    transition: all 0.15s ease;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .tbl-status-btn:hover {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.09) !important;
+  }
+  .tbl-status-btn.active-present {
+    background: rgba(16, 185, 129, 0.22) !important;
+    border-color: #10b981 !important;
+    color: #34d399 !important;
+    font-weight: 700;
+  }
+  .tbl-status-btn.active-half_day {
+    background: rgba(245, 158, 11, 0.22) !important;
+    border-color: #f59e0b !important;
+    color: #fbbf24 !important;
+    font-weight: 700;
+  }
+  .tbl-status-btn.active-absent {
+    background: rgba(239, 68, 68, 0.22) !important;
+    border-color: #ef4444 !important;
+    color: #f87171 !important;
+    font-weight: 700;
+  }
+  .tbl-status-btn.active-paid_leave {
+    background: rgba(59, 130, 246, 0.22) !important;
+    border-color: #3b82f6 !important;
+    color: #60a5fa !important;
+    font-weight: 700;
+  }
+</style>
+
 <!-- Top Header with Date Navigation & View Switcher -->
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
   <div>
@@ -19,12 +96,12 @@
   <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
     <!-- View Switcher -->
     <div class="att-view-tabs">
-      <button type="button" onclick="switchAttMode('tiles')" id="tab-btn-tiles" class="att-view-tab <%= 'active' if @current_mode != 'table' %>">
+      <a href="javascript:void(0)" onclick="switchAttMode('tiles')" id="tab-btn-tiles" class="att-view-tab <%= 'active' if @current_mode != 'table' %>">
         <span>📱</span> 1-Touch Tiles
-      </button>
-      <button type="button" onclick="switchAttMode('table')" id="tab-btn-table" class="att-view-tab <%= 'active' if @current_mode == 'table' %>">
+      </a>
+      <a href="javascript:void(0)" onclick="switchAttMode('table')" id="tab-btn-table" class="att-view-tab <%= 'active' if @current_mode == 'table' %>">
         <span>📋</span> Table Mode
-      </button>
+      </a>
       <%= link_to calendar_attendances_path(month: @selected_date.beginning_of_month), class: "att-view-tab" do %>
         <span>📅</span> Calendar View
       <% end %>
@@ -112,7 +189,7 @@
     <!-- ============================================================= -->
     <!-- 1. INTERACTIVE 1-TOUCH TILE VIEW (MOBILE-FIRST DEFAULT)       -->
     <!-- ============================================================= -->
-    <div id="mode-tiles" class="att-tiles-grid">
+    <div id="mode-tiles" class="att-tiles-grid" style="display: <%= @current_mode == 'table' ? 'none' : 'grid' %>;">
       <% @attendance_records.each do |att| %>
         <% emp = att.employee %>
         <% current_status = att.status.presence || "absent" %>

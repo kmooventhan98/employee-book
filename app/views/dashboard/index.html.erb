@@ -146,105 +146,308 @@
   </div>
 
 <% else %>
-  <!-- ========================================== -->
-  <!-- BUSINESS OWNER (ADMIN) & SUPER ADMIN VIEW  -->
-  <!-- ========================================== -->
+  <!-- ============================================================= -->
+  <!-- BUSINESS OWNER (ADMIN) & SUPER ADMIN VIEW                     -->
+  <!-- EXECUTIVE CASH FLOW & NET PROFIT DASHBOARD                    -->
+  <!-- ============================================================= -->
 
-  <!-- Top Welcome & Date Banner -->
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+  <!-- Top Welcome & Month Navigation Banner -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
     <div>
-      <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.2rem;">
-        Hello, <%= current_user.full_name %> 👋
+      <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.2rem;">
+          Hello, <%= current_user.full_name %> 👋
+        </h2>
         <% if super_admin? %>
-          <span class="badge badge-warning" style="font-size: 0.75rem; vertical-align: middle;">👑 Super Admin</span>
+          <span class="badge badge-warning" style="font-size: 0.75rem;">👑 Super Admin</span>
         <% end %>
-      </h2>
+      </div>
       <p style="color: var(--text-muted); font-size: 0.88rem;">
         <%= Date.current.strftime("%A, %d %B %Y") %> • Business: <strong style="color: #fff;"><%= current_business.name %></strong>
       </p>
     </div>
-    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-      <%= link_to "📝 Mark Today's Attendance", bulk_attendances_path, class: "btn btn-primary" %>
-      <%= link_to "☕ + Tea / Food Expense", new_expense_path, class: "btn btn-secondary" %>
-      <%= link_to "🏗️ + New Project", new_work_project_path, class: "btn btn-secondary" %>
+
+    <!-- Month Navigator & Quick Actions -->
+    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+      <div class="month-nav-bar">
+        <%= link_to root_path(month: @prev_month.strftime("%Y-%m-%d")), class: "month-nav-btn", title: "Previous Month (#{@prev_month.strftime('%b %Y')})" do %>
+          <span>←</span>
+        <% end %>
+        <span class="month-nav-current">📅 <%= @selected_month.strftime("%B %Y") %></span>
+        <%= link_to root_path(month: @next_month.strftime("%Y-%m-%d")), class: "month-nav-btn", title: "Next Month (#{@next_month.strftime('%b %Y')})" do %>
+          <span>→</span>
+        <% end %>
+        <% if @is_current_month %>
+          <span class="badge badge-neutral" style="font-size: 0.7rem; margin-left: 0.25rem;">Current</span>
+        <% else %>
+          <%= link_to "Current Month", root_path, class: "badge badge-primary", style: "font-size: 0.7rem; margin-left: 0.25rem; text-decoration: none;" %>
+        <% end %>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <%= link_to "📝 Attendance", bulk_attendances_path, class: "btn btn-primary" %>
+        <%= link_to "☕ + Expense", new_expense_path, class: "btn btn-secondary" %>
+        <%= link_to "+ Invoice", new_invoice_path(doc_type: "invoice"), class: "btn btn-secondary" %>
+      </div>
     </div>
   </div>
 
-  <!-- Primary Financial Stats Grid -->
-  <div class="stats-grid">
-    <!-- Monthly Net Profit / Loss -->
-    <div class="stat-card <%= @monthly_net_profit >= 0 ? 'success' : 'danger' %>">
-      <div class="stat-icon <%= @monthly_net_profit >= 0 ? 'success' : 'danger' %>">
-        <%= @monthly_net_profit >= 0 ? '💰' : '📉' %>
+  <!-- ============================================================= -->
+  <!-- 1. EXECUTIVE CASH FLOW & NET PROFIT PULSE HERO CARD           -->
+  <!-- ============================================================= -->
+  <div class="cashflow-pulse-card">
+    <div class="cashflow-header-row">
+      <div class="cashflow-title-area">
+        <h3><span>⚡</span> Executive Cash Flow & Net Profit Pulse</h3>
+        <p class="cashflow-subtitle">
+          Realized liquid cash inflow vs actual cash disbursements for <%= @selected_month.strftime("%B %Y") %>
+        </p>
       </div>
-      <div class="stat-meta">
-        <div class="stat-label">This Month's Net Profit</div>
-        <div class="stat-value" style="color: <%= @monthly_net_profit >= 0 ? 'var(--success-text)' : 'var(--danger-text)' %>;">
-          <%= current_business.formatted_currency(@monthly_net_profit) %>
+
+      <!-- Health Status Indicator Badge -->
+      <div>
+        <% if @net_cash_flow > 0 %>
+          <span class="cashflow-health-badge surplus">
+            <span>🟢</span> Net Cash Surplus: +<%= current_business.formatted_currency(@net_cash_flow) %> (<%= @cash_flow_margin_pct %>% margin)
+          </span>
+        <% elsif @net_cash_flow < 0 %>
+          <span class="cashflow-health-badge deficit">
+            <span>🔴</span> Cash Deficit: −<%= current_business.formatted_currency(@net_cash_flow.abs) %>
+          </span>
+        <% else %>
+          <span class="cashflow-health-badge neutral">
+            <span>⚖️</span> Cash Balanced: <%= current_business.formatted_currency(0) %>
+          </span>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Visual Inflow vs Outflow Ratio Meter -->
+    <div class="cashflow-meter-container">
+      <div class="meter-labels-row">
+        <span style="color: #34d399;">
+          💵 Realized Inflow: <%= current_business.formatted_currency(@actual_cash_in) %> (<%= @cash_in_pct %>%)
+        </span>
+        <span style="color: #f87171;">
+          💸 Total Outflow: <%= current_business.formatted_currency(@actual_cash_out) %> (<%= @cash_out_pct %>%)
+        </span>
+      </div>
+      <div class="meter-track" title="Cash In: <%= @cash_in_pct %>% | Cash Out: <%= @cash_out_pct %>%">
+        <div class="meter-segment-in" style="width: <%= @cash_in_pct %>%;"></div>
+        <div class="meter-segment-out" style="width: <%= @cash_out_pct %>%;"></div>
+      </div>
+      <div class="meter-legend">
+        <span>🟢 Collected Client Payments</span>
+        <span>🟡 Disbursed Wages (<%= current_business.formatted_currency(@wages_disbursed) %>) + Advances (<%= current_business.formatted_currency(@advances_disbursed) %>) + Expenses (<%= current_business.formatted_currency(@monthly_expenses) %>)</span>
+      </div>
+    </div>
+
+    <!-- 3 Core Pillars Grid -->
+    <div class="cashflow-pillars-grid">
+      <!-- Pillar 1: Cash In -->
+      <div class="cashflow-pillar primary">
+        <div class="pillar-label">
+          <span>Actual Cash In (Realized)</span>
+          <span style="color: #34d399;">📥</span>
         </div>
-        <div class="stat-subtext">Revenue − (Labor + Expenses)</div>
+        <div class="pillar-value" style="color: #34d399;">
+          +<%= current_business.formatted_currency(@actual_cash_in) %>
+        </div>
+        <div class="pillar-details">
+          Payments realized in bank & cash this month
+        </div>
+        <div class="pillar-breakdown-tags">
+          <div class="breakdown-row">
+            <span style="color: var(--text-muted);">Invoiced this Month:</span>
+            <strong style="color: #fff;"><%= current_business.formatted_currency(@monthly_invoiced) %></strong>
+          </div>
+          <div class="breakdown-row">
+            <span style="color: var(--text-muted);">Collection Efficiency:</span>
+            <strong style="color: <%= @monthly_invoiced > 0 && (@actual_cash_in >= @monthly_invoiced) ? '#34d399' : '#fbbf24' %>;">
+              <%= @monthly_invoiced > 0 ? ((@actual_cash_in / @monthly_invoiced) * 100).round(1) : 100 %>%
+            </strong>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- Revenue Collected -->
-    <div class="stat-card primary">
-      <div class="stat-icon primary">📈</div>
-      <div class="stat-meta">
-        <div class="stat-label">Revenue Collected</div>
-        <div class="stat-value"><%= current_business.formatted_currency(@monthly_revenue) %></div>
-        <div class="stat-subtext">Payments received this month</div>
+      <!-- Pillar 2: Cash Out -->
+      <div class="cashflow-pillar warning">
+        <div class="pillar-label">
+          <span>Actual Cash Out (Disbursed)</span>
+          <span style="color: #f87171;">📤</span>
+        </div>
+        <div class="pillar-value" style="color: #f87171;">
+          −<%= current_business.formatted_currency(@actual_cash_out) %>
+        </div>
+        <div class="pillar-details">
+          Total physical cash disbursements
+        </div>
+        <div class="pillar-breakdown-tags">
+          <div class="breakdown-row">
+            <span style="color: var(--text-muted);">👷 Wages Disbursed:</span>
+            <strong style="color: #fff;"><%= current_business.formatted_currency(@wages_disbursed) %></strong>
+          </div>
+          <div class="breakdown-row">
+            <span style="color: var(--text-muted);">💸 Worker Advances Given:</span>
+            <strong style="color: #fff;"><%= current_business.formatted_currency(@advances_disbursed) %></strong>
+          </div>
+          <div class="breakdown-row">
+            <span style="color: var(--text-muted);">☕ Expenses & Petty Cash:</span>
+            <strong style="color: #fff;"><%= current_business.formatted_currency(@monthly_expenses) %></strong>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- Labor & Wages -->
-    <div class="stat-card warning">
-      <div class="stat-icon warning">👷</div>
-      <div class="stat-meta">
-        <div class="stat-label">Labor Wages (Accrued)</div>
-        <div class="stat-value"><%= current_business.formatted_currency(@monthly_labor_cost) %></div>
-        <div class="stat-subtext">From daily attendances</div>
-      </div>
-    </div>
-
-    <!-- Expenses & Petty Cash -->
-    <div class="stat-card danger">
-      <div class="stat-icon danger">☕</div>
-      <div class="stat-meta">
-        <div class="stat-label">Total Expenses</div>
-        <div class="stat-value"><%= current_business.formatted_currency(@monthly_expenses) %></div>
-        <div class="stat-subtext">Tea/Food: <%= current_business.formatted_currency(@monthly_tea_food_expense) %></div>
+      <!-- Pillar 3: Net Cash & Operating Profit -->
+      <div class="cashflow-pillar accent">
+        <div class="pillar-label">
+          <span>Net Cash Flow & Operating Margin</span>
+          <span>📊</span>
+        </div>
+        <div class="pillar-value" style="color: <%= @net_cash_flow >= 0 ? '#34d399' : '#f87171' %>;">
+          <%= @net_cash_flow >= 0 ? '+' : '' %><%= current_business.formatted_currency(@net_cash_flow) %>
+        </div>
+        <div class="pillar-details">
+          <%= @net_cash_flow >= 0 ? "Cash surplus available in business" : "Outflows exceed current cash inflows" %>
+        </div>
+        <div class="pillar-breakdown-tags">
+          <div class="breakdown-row">
+            <span style="color: var(--text-muted);">Accrual Operating Profit:</span>
+            <strong style="color: <%= @monthly_net_profit >= 0 ? '#34d399' : '#f87171' %>;">
+              <%= @monthly_net_profit >= 0 ? '+' : '' %><%= current_business.formatted_currency(@monthly_net_profit) %>
+            </strong>
+          </div>
+          <div class="breakdown-row">
+            <span style="color: var(--text-muted);">Accrued Labor Cost:</span>
+            <strong style="color: #fff;"><%= current_business.formatted_currency(@monthly_labor_cost) %></strong>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Secondary Quick Metric Pills -->
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-    <div class="card" style="padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+  <!-- ============================================================= -->
+  <!-- 2. RECEIVABLES AGING & UNCOLLECTED CLIENT DUES (ACTIONABLE)   -->
+  <!-- ============================================================= -->
+  <div class="card" style="margin-bottom: 2rem; border-color: <%= @overdue_invoices.any? ? 'rgba(239, 68, 68, 0.3)' : 'rgba(245, 158, 11, 0.25)' %>;">
+    <div class="card-header" style="flex-wrap: wrap; gap: 0.75rem;">
       <div>
-        <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">UNCOLLECTED INVOICE DUES</div>
-        <div style="font-size: 1.25rem; font-weight: 700; color: #fbbf24;"><%= current_business.formatted_currency(@total_unpaid_invoices) %></div>
+        <div class="card-title" style="margin-bottom: 0.25rem;">
+          <span>🧾</span> Uncollected Client Dues & Receivables Aging
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-muted);">
+          Total Pending: <strong style="color: #fbbf24;"><%= current_business.formatted_currency(@total_unpaid_invoices) %></strong>
+          <% if @overdue_amount > 0 %>
+            • Overdue: <strong style="color: #f87171;"><%= current_business.formatted_currency(@overdue_amount) %></strong> (<%= @overdue_invoices.size %> <%= 'invoice'.pluralize(@overdue_invoices.size) %>)
+          <% end %>
+          • In Terms: <strong style="color: #38bdf8;"><%= current_business.formatted_currency(@current_dues_amount) %></strong>
+          • Worker Khata Advances: <strong style="color: #a78bfa;"><%= current_business.formatted_currency(@total_pending_advances) %></strong>
+        </div>
       </div>
-      <%= link_to "View Invoices →", invoices_path, class: "btn btn-secondary btn-sm" %>
+      <div style="display: flex; gap: 0.5rem;">
+        <%= link_to "View All Invoices →", invoices_path, class: "btn btn-secondary btn-sm" %>
+      </div>
     </div>
 
-    <div class="card" style="padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center;">
-      <div>
-        <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">ACTIVE WORKER ADVANCES (KHATA)</div>
-        <div style="font-size: 1.25rem; font-weight: 700; color: #38bdf8;"><%= current_business.formatted_currency(@total_pending_advances) %></div>
+    <% if @priority_unpaid_invoices.empty? %>
+      <div style="text-align: center; padding: 2rem 1rem;">
+        <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🎉</div>
+        <p style="color: #34d399; font-weight: 700; margin-bottom: 0.25rem;">Zero Outstanding Client Invoices!</p>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">All client invoices are fully settled. Excellent cash flow management!</p>
       </div>
-      <%= link_to "View Employees →", employees_path, class: "btn btn-secondary btn-sm" %>
-    </div>
+    <% else %>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Invoice #</th>
+              <th>Due Date & Aging</th>
+              <th>Total Amount</th>
+              <th>Balance Due</th>
+              <th style="text-align: right;">Action & Recovery</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @priority_unpaid_invoices.each do |inv| %>
+              <% 
+                client_name = inv.client&.name.presence || inv.client&.company_name.presence || "Customer"
+                phone_raw = inv.client&.phone.to_s.gsub(/\D/, '')
+                phone_clean = phone_raw.length == 10 ? "91#{phone_raw}" : phone_raw
+                wa_msg = "Hello #{client_name}, this is a gentle reminder from #{current_business.name} regarding Invoice ##{inv.invoice_number}. Outstanding balance: #{current_business.formatted_currency(inv.balance_amount)}#{inv.due_date ? " (Due on #{inv.due_date.strftime('%d %b %Y')})" : ''}. Please arrange payment at your earliest convenience. Thank you!"
+                wa_url = phone_clean.present? ? "https://wa.me/#{phone_clean}?text=#{ERB::Util.url_encode(wa_msg)}" : "https://wa.me/?text=#{ERB::Util.url_encode(wa_msg)}"
+              %>
+              <tr>
+                <td>
+                  <div style="font-weight: 700; color: #fff;">
+                    <%= inv.client ? link_to(inv.client.name, client_path(inv.client)) : "Direct Client" %>
+                  </div>
+                  <% if inv.client&.company_name.present? %>
+                    <div style="font-size: 0.75rem; color: var(--text-dim);"><%= inv.client.company_name %></div>
+                  <% end %>
+                  <% if inv.client&.phone.present? %>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">📞 <%= inv.client.phone %></div>
+                  <% end %>
+                </td>
+                <td>
+                  <div style="font-weight: 600; color: #fff;">
+                    <%= link_to inv.invoice_number, invoice_path(inv) %>
+                  </div>
+                  <div style="font-size: 0.75rem; color: var(--text-dim);"><%= inv.issue_date.strftime("%d %b %Y") %></div>
+                </td>
+                <td>
+                  <% if inv.due_date.present? %>
+                    <% days_diff = (@today - inv.due_date).to_i %>
+                    <% if days_diff > 0 %>
+                      <span class="aging-badge overdue">⚠️ <%= days_diff %> <%= 'day'.pluralize(days_diff) %> overdue</span>
+                    <% elsif days_diff == 0 %>
+                      <span class="aging-badge today">🔔 Due today</span>
+                    <% else %>
+                      <span class="aging-badge upcoming">⏳ Due in <%= days_diff.abs %> <%= 'day'.pluralize(days_diff.abs) %></span>
+                    <% end %>
+                    <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 2px;"><%= inv.due_date.strftime("%d %b %Y") %></div>
+                  <% else %>
+                    <span class="badge badge-neutral">No Due Date</span>
+                  <% end %>
+                </td>
+                <td style="font-weight: 600; color: #fff;">
+                  <%= current_business.formatted_currency(inv.total_amount) %>
+                </td>
+                <td>
+                  <div style="font-weight: 800; font-size: 1rem; color: #fbbf24;">
+                    <%= current_business.formatted_currency(inv.balance_amount) %>
+                  </div>
+                  <div style="font-size: 0.72rem; color: #34d399;">
+                    Paid: <%= current_business.formatted_currency(inv.paid_amount) %>
+                  </div>
+                </td>
+                <td style="text-align: right; white-space: nowrap;">
+                  <div style="display: inline-flex; gap: 0.4rem; align-items: center;">
+                    <%= link_to wa_url, target: "_blank", rel: "noopener", class: "btn-whatsapp", title: "Send WhatsApp Payment Reminder" do %>
+                      <span>💬 WhatsApp</span>
+                    <% end %>
+                    <%= link_to "View", invoice_path(inv), class: "btn btn-secondary btn-sm" %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
   </div>
 
-  <!-- Main Two-Column Layout -->
+  <!-- ============================================================= -->
+  <!-- 3. TWO-COLUMN OPERATIONAL & WORK PROFITABILITY LAYOUT         -->
+  <!-- ============================================================= -->
   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-    <!-- Left Column: Today's Attendance -->
+    <!-- Left Column: Today's Attendance Register -->
     <div class="card">
       <div class="card-header">
         <div class="card-title">
-          <span>📝</span> Today's Labor Attendance
+          <span>📝</span> Today's Labor Attendance Register
         </div>
-        <%= link_to "Open Full Register →", bulk_attendances_path, class: "btn btn-secondary btn-sm" %>
+        <%= link_to "Full Register →", bulk_attendances_path, class: "btn btn-secondary btn-sm" %>
       </div>
 
       <% if @employees.empty? %>
@@ -261,7 +464,7 @@
                 <th>Employee</th>
                 <th>Wage Type</th>
                 <th>Today Status</th>
-                <th>Wage Today</th>
+                <th>Today Wage</th>
               </tr>
             </thead>
             <tbody>
@@ -305,16 +508,16 @@
       <% end %>
     </div>
 
-    <!-- Right Column: Active Works & Projects Profitability -->
+    <!-- Right Column: Work-wise Profitability Breakdown -->
     <div class="card">
       <div class="card-header">
         <div class="card-title">
-          <span>🏗️</span> Active Works & Profitability
+          <span>🏗️</span> Work-wise Profitability Ranking
         </div>
-        <%= link_to "All Works →", work_projects_path, class: "btn btn-secondary btn-sm" %>
+        <%= link_to "Full Work P&L →", work_pnl_reports_path, class: "btn btn-secondary btn-sm" %>
       </div>
 
-      <% if @active_projects.empty? %>
+      <% if @profitable_projects.empty? %>
         <div style="text-align: center; padding: 2.5rem 1rem;">
           <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🏗️</div>
           <p style="color: var(--text-muted); margin-bottom: 1rem;">No active works or jobs tracked yet.</p>
@@ -326,15 +529,16 @@
             <thead>
               <tr>
                 <th>Work / Project</th>
-                <th>Quoted / Billed</th>
+                <th>Billed / Quoted</th>
                 <th>Cost Incurred</th>
-                <th>Profit Margin</th>
+                <th>Net Profit & Margin</th>
               </tr>
             </thead>
             <tbody>
-              <% @active_projects.each do |proj| %>
+              <% @profitable_projects.take(6).each do |proj| %>
                 <% net_prof = proj.net_profit %>
                 <% margin = proj.profit_margin_pct %>
+                <% margin_class = margin >= 20 ? 'high' : (margin >= 0 ? 'medium' : 'negative') %>
                 <tr>
                   <td>
                     <div style="font-weight: 600; color: #fff;"><%= link_to proj.title, work_project_path(proj) %></div>
@@ -345,14 +549,19 @@
                   </td>
                   <td style="color: var(--text-muted);">
                     <%= current_business.formatted_currency(proj.total_cost) %>
-                    <div style="font-size: 0.7rem; color: var(--text-dim);">Labor + Expenses</div>
+                    <div style="font-size: 0.7rem; color: var(--text-dim);">Labor: <%= current_business.formatted_currency(proj.total_labor_cost) %></div>
                   </td>
                   <td>
-                    <span class="badge <%= net_prof >= 0 ? 'badge-success' : 'badge-danger' %>">
-                      <%= net_prof >= 0 ? "+#{margin}%" : "#{margin}%" %>
-                    </span>
-                    <div style="font-size: 0.75rem; font-weight: 600; color: <%= net_prof >= 0 ? 'var(--success-text)' : 'var(--danger-text)' %>;">
-                      <%= current_business.formatted_currency(net_prof) %>
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                      <span class="badge <%= net_prof >= 0 ? 'badge-success' : 'badge-danger' %>">
+                        <%= net_prof >= 0 ? "+#{margin}%" : "#{margin}%" %>
+                      </span>
+                      <strong style="font-size: 0.85rem; color: <%= net_prof >= 0 ? 'var(--success-text)' : 'var(--danger-text)' %>;">
+                        <%= current_business.formatted_currency(net_prof) %>
+                      </strong>
+                    </div>
+                    <div class="margin-track" title="Profit margin: <%= margin %>%">
+                      <div class="margin-fill <%= margin_class %>" style="width: <%= [[margin, 0].max, 100].min %>%;"></div>
                     </div>
                   </td>
                 </tr>
@@ -364,7 +573,9 @@
     </div>
   </div>
 
-  <!-- Bottom Section: Recent Invoices & Quotations -->
+  <!-- ============================================================= -->
+  <!-- 4. BOTTOM SECTION: RECENT INVOICES & QUOTATIONS               -->
+  <!-- ============================================================= -->
   <div class="card">
     <div class="card-header">
       <div class="card-title">

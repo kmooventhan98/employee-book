@@ -169,22 +169,33 @@
 
     <!-- Month Navigator & Quick Actions -->
     <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-      <div class="month-nav-bar">
-        <%= link_to root_path(month: @prev_month.strftime("%Y-%m-%d")), class: "month-nav-btn", title: "Previous Month (#{@prev_month.strftime('%b %Y')})" do %>
-          <span>←</span>
-        <% end %>
-        <span class="month-nav-current">📅 <%= @selected_month.strftime("%B %Y") %></span>
-        <%= link_to root_path(month: @next_month.strftime("%Y-%m-%d")), class: "month-nav-btn", title: "Next Month (#{@next_month.strftime('%b %Y')})" do %>
-          <span>→</span>
-        <% end %>
-        <% if @is_current_month %>
-          <span class="badge badge-neutral" style="font-size: 0.7rem; margin-left: 0.25rem;">Current</span>
-        <% else %>
-          <%= link_to "Current Month", root_path, class: "badge badge-primary", style: "font-size: 0.7rem; margin-left: 0.25rem; text-decoration: none;" %>
-        <% end %>
-      </div>
+      <% if @show_cash_flow_pulse %>
+        <div class="month-nav-bar">
+          <%= link_to root_path(month: @prev_month.strftime("%Y-%m-%d"), pulse: (@show_cash_flow_pulse ? 1 : nil)), class: "month-nav-btn", title: "Previous Month (#{@prev_month.strftime('%b %Y')})" do %>
+            <span>←</span>
+          <% end %>
+          <span class="month-nav-current">📅 <%= @selected_month.strftime("%B %Y") %></span>
+          <%= link_to root_path(month: @next_month.strftime("%Y-%m-%d"), pulse: (@show_cash_flow_pulse ? 1 : nil)), class: "month-nav-btn", title: "Next Month (#{@next_month.strftime('%b %Y')})" do %>
+            <span>→</span>
+          <% end %>
+          <% if @is_current_month %>
+            <span class="badge badge-neutral" style="font-size: 0.7rem; margin-left: 0.25rem;">Current</span>
+          <% else %>
+            <%= link_to "Current Month", root_path(pulse: (@show_cash_flow_pulse ? 1 : nil)), class: "badge badge-primary", style: "font-size: 0.7rem; margin-left: 0.25rem; text-decoration: none;" %>
+          <% end %>
+        </div>
+      <% end %>
 
-      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+        <% if @show_cash_flow_pulse %>
+          <% if !current_business.show_cash_flow_pulse? %>
+            <%= link_to "✕ Hide Pulse", root_path(pulse: 0), class: "btn btn-secondary btn-sm", style: "font-size: 0.78rem;", title: "Hide Cash Flow Pulse" %>
+          <% else %>
+            <%= link_to "⚙️ Pulse Settings", business_settings_path, class: "btn btn-secondary btn-sm", style: "font-size: 0.78rem; color: var(--text-muted);", title: "Configure dashboard pulse in settings" %>
+          <% end %>
+        <% else %>
+          <%= link_to "⚡ View Cash Flow Pulse", root_path(pulse: 1), class: "btn btn-secondary btn-sm", style: "font-size: 0.78rem; border-color: rgba(99, 102, 241, 0.4); color: #818cf8;", title: "Click to preview Cash Flow & Net Profit Pulse (hidden by default)" %>
+        <% end %>
         <%= link_to "📝 Attendance", bulk_attendances_path, class: "btn btn-primary" %>
         <%= link_to "☕ + Expense", new_expense_path, class: "btn btn-secondary" %>
         <%= link_to "+ Invoice", new_invoice_path(doc_type: "invoice"), class: "btn btn-secondary" %>
@@ -192,139 +203,141 @@
     </div>
   </div>
 
-  <!-- ============================================================= -->
-  <!-- 1. EXECUTIVE CASH FLOW & NET PROFIT PULSE HERO CARD           -->
-  <!-- ============================================================= -->
-  <div class="cashflow-pulse-card">
-    <div class="cashflow-header-row">
-      <div class="cashflow-title-area">
-        <h3><span>⚡</span> Executive Cash Flow & Net Profit Pulse</h3>
-        <p class="cashflow-subtitle">
-          Realized liquid cash inflow vs actual cash disbursements for <%= @selected_month.strftime("%B %Y") %>
-        </p>
+  <% if @show_cash_flow_pulse %>
+    <!-- ============================================================= -->
+    <!-- 1. EXECUTIVE CASH FLOW & NET PROFIT PULSE HERO CARD (OPTIONAL) -->
+    <!-- ============================================================= -->
+    <div class="cashflow-pulse-card">
+      <div class="cashflow-header-row">
+        <div class="cashflow-title-area">
+          <h3><span>⚡</span> Executive Cash Flow & Net Profit Pulse</h3>
+          <p class="cashflow-subtitle">
+            Realized liquid cash inflow vs actual cash disbursements for <%= @selected_month.strftime("%B %Y") %>
+          </p>
+        </div>
+
+        <!-- Health Status Indicator Badge -->
+        <div>
+          <% if @net_cash_flow > 0 %>
+            <span class="cashflow-health-badge surplus">
+              <span>🟢</span> Net Cash Surplus: +<%= current_business.formatted_currency(@net_cash_flow) %> (<%= @cash_flow_margin_pct %>% margin)
+            </span>
+          <% elsif @net_cash_flow < 0 %>
+            <span class="cashflow-health-badge deficit">
+              <span>🔴</span> Cash Deficit: −<%= current_business.formatted_currency(@net_cash_flow.abs) %>
+            </span>
+          <% else %>
+            <span class="cashflow-health-badge neutral">
+              <span>⚖️</span> Cash Balanced: <%= current_business.formatted_currency(0) %>
+            </span>
+          <% end %>
+        </div>
       </div>
 
-      <!-- Health Status Indicator Badge -->
-      <div>
-        <% if @net_cash_flow > 0 %>
-          <span class="cashflow-health-badge surplus">
-            <span>🟢</span> Net Cash Surplus: +<%= current_business.formatted_currency(@net_cash_flow) %> (<%= @cash_flow_margin_pct %>% margin)
+      <!-- Visual Inflow vs Outflow Ratio Meter -->
+      <div class="cashflow-meter-container">
+        <div class="meter-labels-row">
+          <span style="color: #34d399;">
+            💵 Realized Inflow: <%= current_business.formatted_currency(@actual_cash_in) %> (<%= @cash_in_pct %>%)
           </span>
-        <% elsif @net_cash_flow < 0 %>
-          <span class="cashflow-health-badge deficit">
-            <span>🔴</span> Cash Deficit: −<%= current_business.formatted_currency(@net_cash_flow.abs) %>
+          <span style="color: #f87171;">
+            💸 Total Outflow: <%= current_business.formatted_currency(@actual_cash_out) %> (<%= @cash_out_pct %>%)
           </span>
-        <% else %>
-          <span class="cashflow-health-badge neutral">
-            <span>⚖️</span> Cash Balanced: <%= current_business.formatted_currency(0) %>
-          </span>
-        <% end %>
+        </div>
+        <div class="meter-track" title="Cash In: <%= @cash_in_pct %>% | Cash Out: <%= @cash_out_pct %>%">
+          <div class="meter-segment-in" style="width: <%= @cash_in_pct %>%;"></div>
+          <div class="meter-segment-out" style="width: <%= @cash_out_pct %>%;"></div>
+        </div>
+        <div class="meter-legend">
+          <span>🟢 Collected Client Payments</span>
+          <span>🟡 Disbursed Wages (<%= current_business.formatted_currency(@wages_disbursed) %>) + Advances (<%= current_business.formatted_currency(@advances_disbursed) %>) + Expenses (<%= current_business.formatted_currency(@monthly_expenses) %>)</span>
+        </div>
+      </div>
+
+      <!-- 3 Core Pillars Grid -->
+      <div class="cashflow-pillars-grid">
+        <!-- Pillar 1: Cash In -->
+        <div class="cashflow-pillar primary">
+          <div class="pillar-label">
+            <span>Actual Cash In (Realized)</span>
+            <span style="color: #34d399;">📥</span>
+          </div>
+          <div class="pillar-value" style="color: #34d399;">
+            +<%= current_business.formatted_currency(@actual_cash_in) %>
+          </div>
+          <div class="pillar-details">
+            Payments realized in bank & cash this month
+          </div>
+          <div class="pillar-breakdown-tags">
+            <div class="breakdown-row">
+              <span style="color: var(--text-muted);">Invoiced this Month:</span>
+              <strong style="color: #fff;"><%= current_business.formatted_currency(@monthly_invoiced) %></strong>
+            </div>
+            <div class="breakdown-row">
+              <span style="color: var(--text-muted);">Collection Efficiency:</span>
+              <strong style="color: <%= @monthly_invoiced > 0 && (@actual_cash_in >= @monthly_invoiced) ? '#34d399' : '#fbbf24' %>;">
+                <%= @monthly_invoiced > 0 ? ((@actual_cash_in / @monthly_invoiced) * 100).round(1) : 100 %>%
+              </strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pillar 2: Cash Out -->
+        <div class="cashflow-pillar warning">
+          <div class="pillar-label">
+            <span>Actual Cash Out (Disbursed)</span>
+            <span style="color: #f87171;">📤</span>
+          </div>
+          <div class="pillar-value" style="color: #f87171;">
+            −<%= current_business.formatted_currency(@actual_cash_out) %>
+          </div>
+          <div class="pillar-details">
+            Total physical cash disbursements
+          </div>
+          <div class="pillar-breakdown-tags">
+            <div class="breakdown-row">
+              <span style="color: var(--text-muted);">👷 Wages Disbursed:</span>
+              <strong style="color: #fff;"><%= current_business.formatted_currency(@wages_disbursed) %></strong>
+            </div>
+            <div class="breakdown-row">
+              <span style="color: var(--text-muted);">💸 Worker Advances Given:</span>
+              <strong style="color: #fff;"><%= current_business.formatted_currency(@advances_disbursed) %></strong>
+            </div>
+            <div class="breakdown-row">
+              <span style="color: var(--text-muted);">☕ Expenses & Petty Cash:</span>
+              <strong style="color: #fff;"><%= current_business.formatted_currency(@monthly_expenses) %></strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pillar 3: Net Cash & Operating Profit -->
+        <div class="cashflow-pillar accent">
+          <div class="pillar-label">
+            <span>Net Cash Flow & Operating Margin</span>
+            <span>📊</span>
+          </div>
+          <div class="pillar-value" style="color: <%= @net_cash_flow >= 0 ? '#34d399' : '#f87171' %>;">
+            <%= @net_cash_flow >= 0 ? '+' : '' %><%= current_business.formatted_currency(@net_cash_flow) %>
+          </div>
+          <div class="pillar-details">
+            <%= @net_cash_flow >= 0 ? "Cash surplus available in business" : "Outflows exceed current cash inflows" %>
+          </div>
+          <div class="pillar-breakdown-tags">
+            <div class="breakdown-row">
+              <span style="color: var(--text-muted);">Accrual Operating Profit:</span>
+              <strong style="color: <%= @monthly_net_profit >= 0 ? '#34d399' : '#f87171' %>;">
+                <%= @monthly_net_profit >= 0 ? '+' : '' %><%= current_business.formatted_currency(@monthly_net_profit) %>
+              </strong>
+            </div>
+            <div class="breakdown-row">
+              <span style="color: var(--text-muted);">Accrued Labor Cost:</span>
+              <strong style="color: #fff;"><%= current_business.formatted_currency(@monthly_labor_cost) %></strong>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-
-    <!-- Visual Inflow vs Outflow Ratio Meter -->
-    <div class="cashflow-meter-container">
-      <div class="meter-labels-row">
-        <span style="color: #34d399;">
-          💵 Realized Inflow: <%= current_business.formatted_currency(@actual_cash_in) %> (<%= @cash_in_pct %>%)
-        </span>
-        <span style="color: #f87171;">
-          💸 Total Outflow: <%= current_business.formatted_currency(@actual_cash_out) %> (<%= @cash_out_pct %>%)
-        </span>
-      </div>
-      <div class="meter-track" title="Cash In: <%= @cash_in_pct %>% | Cash Out: <%= @cash_out_pct %>%">
-        <div class="meter-segment-in" style="width: <%= @cash_in_pct %>%;"></div>
-        <div class="meter-segment-out" style="width: <%= @cash_out_pct %>%;"></div>
-      </div>
-      <div class="meter-legend">
-        <span>🟢 Collected Client Payments</span>
-        <span>🟡 Disbursed Wages (<%= current_business.formatted_currency(@wages_disbursed) %>) + Advances (<%= current_business.formatted_currency(@advances_disbursed) %>) + Expenses (<%= current_business.formatted_currency(@monthly_expenses) %>)</span>
-      </div>
-    </div>
-
-    <!-- 3 Core Pillars Grid -->
-    <div class="cashflow-pillars-grid">
-      <!-- Pillar 1: Cash In -->
-      <div class="cashflow-pillar primary">
-        <div class="pillar-label">
-          <span>Actual Cash In (Realized)</span>
-          <span style="color: #34d399;">📥</span>
-        </div>
-        <div class="pillar-value" style="color: #34d399;">
-          +<%= current_business.formatted_currency(@actual_cash_in) %>
-        </div>
-        <div class="pillar-details">
-          Payments realized in bank & cash this month
-        </div>
-        <div class="pillar-breakdown-tags">
-          <div class="breakdown-row">
-            <span style="color: var(--text-muted);">Invoiced this Month:</span>
-            <strong style="color: #fff;"><%= current_business.formatted_currency(@monthly_invoiced) %></strong>
-          </div>
-          <div class="breakdown-row">
-            <span style="color: var(--text-muted);">Collection Efficiency:</span>
-            <strong style="color: <%= @monthly_invoiced > 0 && (@actual_cash_in >= @monthly_invoiced) ? '#34d399' : '#fbbf24' %>;">
-              <%= @monthly_invoiced > 0 ? ((@actual_cash_in / @monthly_invoiced) * 100).round(1) : 100 %>%
-            </strong>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pillar 2: Cash Out -->
-      <div class="cashflow-pillar warning">
-        <div class="pillar-label">
-          <span>Actual Cash Out (Disbursed)</span>
-          <span style="color: #f87171;">📤</span>
-        </div>
-        <div class="pillar-value" style="color: #f87171;">
-          −<%= current_business.formatted_currency(@actual_cash_out) %>
-        </div>
-        <div class="pillar-details">
-          Total physical cash disbursements
-        </div>
-        <div class="pillar-breakdown-tags">
-          <div class="breakdown-row">
-            <span style="color: var(--text-muted);">👷 Wages Disbursed:</span>
-            <strong style="color: #fff;"><%= current_business.formatted_currency(@wages_disbursed) %></strong>
-          </div>
-          <div class="breakdown-row">
-            <span style="color: var(--text-muted);">💸 Worker Advances Given:</span>
-            <strong style="color: #fff;"><%= current_business.formatted_currency(@advances_disbursed) %></strong>
-          </div>
-          <div class="breakdown-row">
-            <span style="color: var(--text-muted);">☕ Expenses & Petty Cash:</span>
-            <strong style="color: #fff;"><%= current_business.formatted_currency(@monthly_expenses) %></strong>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pillar 3: Net Cash & Operating Profit -->
-      <div class="cashflow-pillar accent">
-        <div class="pillar-label">
-          <span>Net Cash Flow & Operating Margin</span>
-          <span>📊</span>
-        </div>
-        <div class="pillar-value" style="color: <%= @net_cash_flow >= 0 ? '#34d399' : '#f87171' %>;">
-          <%= @net_cash_flow >= 0 ? '+' : '' %><%= current_business.formatted_currency(@net_cash_flow) %>
-        </div>
-        <div class="pillar-details">
-          <%= @net_cash_flow >= 0 ? "Cash surplus available in business" : "Outflows exceed current cash inflows" %>
-        </div>
-        <div class="pillar-breakdown-tags">
-          <div class="breakdown-row">
-            <span style="color: var(--text-muted);">Accrual Operating Profit:</span>
-            <strong style="color: <%= @monthly_net_profit >= 0 ? '#34d399' : '#f87171' %>;">
-              <%= @monthly_net_profit >= 0 ? '+' : '' %><%= current_business.formatted_currency(@monthly_net_profit) %>
-            </strong>
-          </div>
-          <div class="breakdown-row">
-            <span style="color: var(--text-muted);">Accrued Labor Cost:</span>
-            <strong style="color: #fff;"><%= current_business.formatted_currency(@monthly_labor_cost) %></strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <% end %>
 
   <!-- ============================================================= -->
   <!-- 2. RECEIVABLES AGING & UNCOLLECTED CLIENT DUES (ACTIONABLE)   -->

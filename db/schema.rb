@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_171953) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_20_150802) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -87,6 +87,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_171953) do
     t.text "google_drive_refresh_token"
     t.datetime "google_drive_token_expires_at"
     t.string "google_drive_email"
+    t.boolean "show_cash_flow_pulse", default: false, null: false
   end
 
   create_table "clients", force: :cascade do |t|

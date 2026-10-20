@@ -18,6 +18,11 @@ class DashboardController < ApplicationController
     @prev_month = @selected_month.prev_month
     @next_month = @selected_month.next_month
     @is_current_month = (@selected_month == Date.current.beginning_of_month)
+    @show_cash_flow_pulse = if params[:pulse].present?
+      params[:pulse] == "1" || params[:pulse] == "true"
+    else
+      current_business&.show_cash_flow_pulse? || false
+    end
 
     start_of_month = @selected_month
     end_of_month = @selected_month.end_of_month

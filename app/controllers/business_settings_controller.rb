@@ -25,7 +25,8 @@ class BusinessSettingsController < ApplicationController
     params.require(:business).permit(
       :name, :phone, :email, :currency_code, :currency_symbol, :address, :tax_id,
       :invoice_prefix, :quotation_prefix, :logo,
-      :google_drive_connected, :google_drive_email, :google_drive_folder_id
+      :google_drive_connected, :google_drive_email, :google_drive_folder_id,
+      :show_cash_flow_pulse
     )
   end
 end

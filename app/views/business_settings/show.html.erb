@@ -64,7 +64,46 @@
     <% end %>
   </div>
 
-  <!-- 2. Business Profile Card -->
+  <!-- 2. Dashboard Preferences Card (Executive Pulse Option) -->
+  <div class="card" style="margin-bottom: 2rem; border-color: rgba(99, 102, 241, 0.35); background: linear-gradient(145deg, rgba(99, 102, 241, 0.08) 0%, rgba(17, 24, 39, 0.95) 100%);">
+    <div class="card-header">
+      <div class="card-title">
+        <span>⚡</span> Dashboard Preferences & Financial Pulse
+      </div>
+      <span class="badge <%= @business.show_cash_flow_pulse? ? 'badge-success' : 'badge-neutral' %>">
+        <%= @business.show_cash_flow_pulse? ? "✓ Pulse Visible on Dashboard" : "Hidden by Default" %>
+      </span>
+    </div>
+
+    <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.25rem;">
+      Customize whether executive cash-flow tracking and the Net Profit Pulse widget are shown on your main dashboard.
+    </p>
+
+    <%= form_with model: @business, url: business_settings_path, method: :patch, local: true do |f| %>
+      <div style="background: rgba(0, 0, 0, 0.35); padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
+        <div style="display: flex; align-items: flex-start; gap: 0.85rem;">
+          <%= f.check_box :show_cash_flow_pulse, id: "show_cash_flow_pulse_toggle", style: "width: 20px; height: 20px; margin-top: 3px; accent-color: var(--primary);" %>
+          <div>
+            <label for="show_cash_flow_pulse_toggle" style="font-size: 0.95rem; font-weight: 700; color: #fff; cursor: pointer; display: block; margin-bottom: 0.25rem;">
+              Show Cash Flow & Net Profit Pulse Card
+            </label>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.5rem; line-height: 1.4;">
+              Enables the real-time Cash Inflow vs Outflow ratio meter, net liquid cash surplus/deficit badge, and month navigator on your main dashboard.
+            </p>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">
+              <strong style="color: #fbbf24;">Default is Hidden:</strong> When unchecked, your main dashboard remains lightweight and focused on daily attendance, projects, and invoices.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end;">
+        <%= f.submit "Save Dashboard Preferences", class: "btn btn-primary btn-sm" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 3. Business Profile Card -->
   <div class="card" style="margin-bottom: 2rem;">
     <div class="card-header">
       <div class="card-title">
